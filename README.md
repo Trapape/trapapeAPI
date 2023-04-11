@@ -1,2 +1,2 @@
 # trapapeAPI
-Gestion de procesos para la plataforma tecnologica de Trapape
+Gestion de procesos para la plataforma tecnólogica de Trapape

@@ -32,13 +32,19 @@ namespace ApiTrapAppE.Controllers
             {
                 if(Objfile.file.Length > 0)
                 {
-                    Stream archivo = Objfile.file.OpenReadStream();
-                    string nombre = Objfile.file.FileName;
+                    //DATOS DE CONEXION
                     string user = "cargaeexcel@gmail.com";
                     string pass = "tr4p4p3AP1#";
                     string ruta = "trapape.appspot.com";
                     string api_key = "AIzaSyBs-iRGy4GQdnqmLrDqMSV8sIcraM9kXl4";
 
+                    Stream archivo = Objfile.file.OpenReadStream();
+
+                    string ext = Path.GetExtension(Objfile.file.FileName);
+                    Guid IdDoucumento = Guid.NewGuid();
+
+                    string nombre = IdDoucumento + ext;
+                    
                     var auth = new FirebaseAuthProvider(new FirebaseConfig(api_key));
                     var access = await auth.SignInWithEmailAndPasswordAsync(user, pass);
 

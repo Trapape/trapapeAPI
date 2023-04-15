@@ -8,6 +8,7 @@ using FireSharp;
 using FireSharp.Config;
 using FireSharp.Interfaces;
 using FireSharp.Response;
+using System.Data;
 
 namespace ApiTrapAppE.Controllers
 {
@@ -18,6 +19,18 @@ namespace ApiTrapAppE.Controllers
         public IActionResult Index()
         {
             return View();
+        }
+
+        public ProcesaExcelController()
+        {
+            IFirebaseConfig config = new FirebaseConfig
+            {
+                AuthSecret = "ROXWHVG92cDBzvSNLDp76a4WMXgQdW36NoWnxKVi",
+                BasePath = "https://trapape-default-rtdb.firebaseio.com/"
+
+            };
+
+            cliente = new FirebaseClient(config);
         }
 
         public string ProcesaExcel([FromForm] IFormFile ArchivoExcel, string NombreArchivo)
@@ -35,152 +48,130 @@ namespace ApiTrapAppE.Controllers
                 MiExcel = new HSSFWorkbook(stream);
             }
 
-            ISheet HojaExcel = MiExcel.GetSheetAt(0); 
-            int cantidadFilas = HojaExcel.LastRowNum;
-            int filaLoad = 0;
+            int cantidadHojas = MiExcel.NumberOfSheets; // Saca el numero de hojas para los diferentes tipos de carga
 
             List<LoadsModel> Load = new List<LoadsModel>();
 
-            for (int i = 1; i <= cantidadFilas; i++)
+            //Recorre las hojas para insertar de cada carga
+            for (int hoja = 0; hoja < cantidadHojas; hoja++)
             {
-                IRow fila = HojaExcel.GetRow(i);
+                ISheet HojaExcel = MiExcel.GetSheetAt(hoja);
+                int cantidadFilas = HojaExcel.LastRowNum;
 
-                Load.Add(new LoadsModel
-                {   
-                        Internacional = Convert.ToBoolean(fila.GetCell(1).ToString())
-                    ,   Punto = GetPunto(fila)
-                    ,   actInternacional = fila.GetCell(32).ToString()
-                    ,   cargaPeligrosa = Convert.ToBoolean(fila.GetCell(33).ToString())
-                    ,   cargaRefrigerada = Convert.ToBoolean(fila.GetCell(34).ToString())
-                    ,   cargaTitulo = fila.GetCell(35).ToString()
-                    ,   config = GetConfig(fila)
-                    ,   dimencionAlto = fila.GetCell(39).ToString()
-                    ,   dimencionAncho = fila.GetCell(40).ToString()
-                    ,   dimensionLargo = fila.GetCell(41).ToString()
-                    ,   distanciaKM = Convert.ToDecimal(fila.GetCell(42).ToString())
-                    ,   fotos = Convert.ToBoolean(fila.GetCell(43).ToString())
-                    ,   permisosEspeciales = Convert.ToBoolean(fila.GetCell(44).ToString())
-                    ,   pesoTotal = Convert.ToDecimal(fila.GetCell(45).ToString())
-                    ,   precioViaje = Convert.ToDecimal(fila.GetCell(46).ToString())
-                    ,   recibirOfertas = Convert.ToBoolean(fila.GetCell(47).ToString())
-                    ,   recomenFragil = Convert.ToBoolean(fila.GetCell(48).ToString())
-                    ,   recomenManejoCuidado = Convert.ToBoolean(fila.GetCell(49).ToString())
-                    ,   recomenMantenerSeco = Convert.ToBoolean(fila.GetCell(50).ToString())
-                    ,   tiempoRuta = fila.GetCell(51).ToString()
-                    ,   userConsig = fila.GetCell(52).ToString()
-                    ,   userOperador = fila.GetCell(53).ToString()
-                    ,   userTranspor = fila.GetCell(54).ToString()
-                    ,   userTruck = fila.GetCell(55).ToString()
+                if(cantidadFilas == 0)
+                {
+                    continue;
+                }
 
-                });
+                int cuerpoFilas = 0;
+                DataTable dtExcelData = GeneraTabla(HojaExcel.GetRow(0), HojaExcel.GetRow(0).LastCellNum);
 
-                Object Loadfila = Load[0];
+                for (int ifila = 0; ifila <= cantidadFilas; ifila++)
+                {
+                    IRow fila = HojaExcel.GetRow(ifila);
 
-                SubirInfo(Loadfila);
+                    if (ifila == 0)
+                    {
+                        continue;
+                    }
+
+                    InsertaTabla(dtExcelData, fila, fila.LastCellNum);
+                }
+
+                GeneraLoad(dtExcelData, NombreArchivo);
             }
 
             return JsonConvert.SerializeObject(Load);
         }
 
-        public PuntoModel GetPunto(IRow dr)
+        public DataTable GeneraTabla(IRow dr, int intdtcolumn)
         {
-            List<PuntoModel> Punto = new List<PuntoModel>();
-            Punto.Add(new PuntoModel
+            var dtExcelData = new DataTable();
+
+            for (int icolumn = 0; icolumn < intdtcolumn; icolumn++)
             {
-                    entrega = (EntregaModel)GetEntrega(dr)
-                ,   recoleccion = (RecoleccionModel)GetRecoleccion(dr)
+                dtExcelData.Columns.Add(dr.GetCell(icolumn).ToString());
 
-            });
+            }
 
-            return Punto[0];
+            return dtExcelData;
         }
 
-        public ConfigModel GetConfig(IRow dr)
+        public DataTable InsertaTabla(DataTable dtExcelData, IRow dr, int intdtcolumn)
         {
-            List<ConfigModel> Config = new List<ConfigModel>();
-            Config.Add(new ConfigModel
-            {
-                config = (ConfigConfigModel)GetConfigConfig(dr)
-            });
+            DataRow renglon = dtExcelData.NewRow();
 
-            return Config[0];
+            for (int icolumn = 0; icolumn < intdtcolumn; icolumn++)
+            {
+                if(dr.GetCell(icolumn) == null)
+                {
+                    renglon[icolumn] = "";
+                }
+                else
+                {
+                    renglon[icolumn] = dr.GetCell(icolumn).ToString();
+                }
+            }
+
+            dtExcelData.Rows.Add(renglon);
+
+            return dtExcelData;
         }
 
-        public Object GetEntrega(IRow dr)
+        public string GeneraLoad(DataTable dtExcelData, string NombreArchivo)
         {
-            object PEntrega = (new EntregaModel
+            if(dtExcelData.Rows.Count > 0)
             {
-                    administrative_area = Convert.ToString(dr.GetCell(2).ToString())
-                ,   country = Convert.ToString(dr.GetCell(3).ToString())
-                ,   direccion = dr.GetCell(4).ToString()
-                ,   fechaInicial = dr.GetCell(5).ToString()
-                ,   formaCarga = dr.GetCell(6).ToString()
-                ,   horaInicial = dr.GetCell(7).ToString()
-                ,   latitud = Convert.ToDecimal(dr.GetCell(8).ToString())
-                ,   locality = dr.GetCell(9).ToString()
-                ,   longitud = Convert.ToDecimal(dr.GetCell(10).ToString())
-                ,   lugarEntrega = dr.GetCell(11).ToString()
-                ,   postal_code= dr.GetCell(12).ToString()
-                ,   route = dr.GetCell(13).ToString()
-                ,   street_number = dr.GetCell(14).ToString()
-                ,   sublocality = dr.GetCell(15).ToString()
-                ,   tiempoCarga = dr.GetCell(16).ToString()
+                foreach (DataRow row in dtExcelData.Rows)
+                {
+                    string cargaDescripcion;
+                    List<LoadsModel> Load = new List<LoadsModel>();
 
-            });
-            return PEntrega;
+                    Guid IdGenerado = Guid.NewGuid();
+
+                    Load.Add(new LoadsModel
+                    {
+                            IdLoad = Convert.ToString(IdGenerado)
+                        ,   cargaDescripcion = Convert.ToString(row.Field<string>("cargaDescripcion"))
+                        ,   cargaRefrigerada = Convert.ToBoolean(row.Field<string>("cargaRefrigerada"))
+                        ,   cargaTitulo = Convert.ToString(row.Field<string>("cargaTitulo"))
+                        ,   distanciaKM = Convert.ToDecimal(row.Field<string>("distanciaKM"))
+                        ,   foto1 = Convert.ToBoolean(row.Field<string>("foto1"))
+                        ,   foto2 = Convert.ToBoolean(row.Field<string>("foto2"))
+                        ,   foto3 = Convert.ToBoolean(row.Field<string>("foto3"))
+                        ,   fotos = Convert.ToBoolean(row.Field<string>("fotos"))
+                        ,   numRemolques = Convert.ToInt32(row.Field<string>("numRemolques"))
+                        ,   precioViaje = Convert.ToDecimal(row.Field<string>("precioViaje"))
+                        ,   recibirOfertas = Convert.ToBoolean(row.Field<string>("recibirOfertas"))
+                        ,   recomenEstibar = Convert.ToBoolean(row.Field<string>("recomenEstibar"))
+                        ,   recomenFragil = Convert.ToBoolean(row.Field<string>("recomenFragil"))
+                        ,   recomenManejoCuidado = Convert.ToBoolean(row.Field<string>("recomenManejoCuidado"))
+                        ,   recomenMantenerSeco = Convert.ToBoolean(row.Field<string>("recomenMantenerSeco"))
+                        ,   seguroCarga = Convert.ToString(row.Field<string>("seguroCarga"))
+                        ,   tiempoRuta = Convert.ToString(row.Field<string>("tiempoRuta"))
+                        ,   tipoCarga = Convert.ToString(row.Field<string>("tipoCarga"))
+                        ,   tipoUnidad = Convert.ToString(row.Field<string>("tipoUnidad"))
+                        ,   userConsig = Convert.ToString(row.Field<string>("userConsig"))
+                        ,   userOperador = Convert.ToString(row.Field<string>("userOperador"))
+                        ,   userTranspor = Convert.ToString(row.Field<string>("userTranspor"))
+                        ,   Punto = GetPunto(row)
+                        ,   Remolque = GetRemolque(row)
+                        ,   config = GetConfig(row)
+                        ,   nombreExcel = NombreArchivo
+
+                    });
+
+                    Object Loadfila = Load[0];
+
+                    SubirInfo(Loadfila, Convert.ToString(IdGenerado));
+                }
+            }
+
+            return "Carga Exitosas";
         }
 
-        public Object GetRecoleccion(IRow dr)
+        public string SubirInfo(Object Load, string IdGenerado)
         {
-            object PRecoleccion = (new RecoleccionModel
-            {
-                    administrative_area = Convert.ToString(dr.GetCell(17).ToString())
-                ,   country = Convert.ToString(dr.GetCell(18).ToString())
-                ,   direccion = dr.GetCell(19).ToString()
-                ,   fechaInicial = dr.GetCell(20).ToString()
-                ,   formaCarga = dr.GetCell(21).ToString()
-                ,   horaInicial = dr.GetCell(22).ToString()
-                ,   latitud = Convert.ToDecimal(dr.GetCell(23).ToString())
-                ,   locality = dr.GetCell(24).ToString()
-                ,   longitud = Convert.ToDecimal(dr.GetCell(25).ToString())
-                ,   lugarEntrega = dr.GetCell(26).ToString()
-                ,   postal_code = dr.GetCell(27).ToString()
-                ,   route = dr.GetCell(28).ToString()
-                ,   street_number = dr.GetCell(29).ToString()
-                ,   sublocality = dr.GetCell(30).ToString()
-                ,   tiempoCarga = dr.GetCell(31).ToString()
-
-            });
-            return PRecoleccion;
-        }
-
-        public ProcesaExcelController()
-        {
-            IFirebaseConfig config = new FirebaseConfig
-            {
-                AuthSecret = "ROXWHVG92cDBzvSNLDp76a4WMXgQdW36NoWnxKVi",
-                BasePath = "https://trapape-default-rtdb.firebaseio.com/"
-
-            };
-
-            cliente = new FirebaseClient(config);
-        }
-
-        public Object GetConfigConfig(IRow dr)
-        {
-            object CConfig = (new ConfigConfigModel
-            {
-                    estatusCarga = dr.GetCell(36).ToString()
-                ,   fechaCreado = Convert.ToString(dr.GetCell(37).ToString())
-                ,   notificacionOferta = Convert.ToBoolean(dr.GetCell(38).ToString())
-            });
-            return CConfig;
-        }
-
-        public string SubirInfo(Object Load)
-        {
-            string IdGenerado = Guid.NewGuid().ToString("N");
-
             SetResponse response = cliente.Set("projects/proj_meqjHnqVDFjzhizHdj6Fjq/data/Loads/" + IdGenerado, Load);
 
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
@@ -191,6 +182,246 @@ namespace ApiTrapAppE.Controllers
             {
                 return "No se cargaron los datos.";
             }
+        }
+
+        public PuntoModel GetPunto(DataRow row)
+        {
+            List<PuntoModel> Punto = new List<PuntoModel>();
+            Punto.Add(new PuntoModel
+            {
+                    entrega = (EntregaModel)GetEntrega(row)
+                ,   recoleccion = (RecoleccionModel)GetRecoleccion(row)
+
+            });
+
+            return Punto[0];
+        }
+
+        public RemolqueModel GetRemolque(DataRow row)
+        {
+            List<RemolqueModel> Punto = new List<RemolqueModel>();
+            Punto.Add(new RemolqueModel
+            {
+                    remolque1 = (RemolqueDetalleModel)GetDetalleRemolque(row)
+                ,   remolque2 = (RemolqueDetalleModel)GetDetalleRemolque(row)
+
+            });
+
+            return Punto[0];
+        }
+
+        public ConfigModel GetConfig(DataRow row)
+        {
+            List<ConfigModel> Config = new List<ConfigModel>();
+            Config.Add(new ConfigModel
+            {
+                config = (ConfigConfigModel)GetConfigConfig(row)
+            });
+
+            return Config[0];
+        }
+
+        public Object GetEntrega(DataRow row)
+        {
+            EntregaModel PEntrega = new EntregaModel();
+
+            if (row.Table.Columns.Contains("record_id") && row["record_id"] is not null)
+            {
+                PEntrega.record_id = (string)row["record_id"];
+            }
+
+            if (row.Table.Columns.Contains("administrative_area") && row["administrative_area"] is not null)
+            {
+                PEntrega.administrative_area = (string)row["administrative_area"];
+            }
+
+            if (row.Table.Columns.Contains("country") && row["country"] is not null)
+            {
+                PEntrega.country = (string)row["country"];
+            }
+
+            if (row.Table.Columns.Contains("fecha") && row["fecha"] is not null)
+            {
+                PEntrega.fecha = (string)row["fecha"];
+            }
+
+            if (row.Table.Columns.Contains("hora") && row["hora"] is not null)
+            {
+                PEntrega.hora = (string)row["hora"];
+            }
+
+            if (row.Table.Columns.Contains("locality") && row["locality"] is not null)
+            {
+                PEntrega.locality = (string)row["locality"];
+            }
+
+            if (row.Table.Columns.Contains("latitud") && row["latitud"] is not null)
+            {
+                PEntrega.latitud = (decimal)row["latitud"];
+            }
+
+            if (row.Table.Columns.Contains("longitud") && row["longitud"] is not null)
+            {
+                PEntrega.longitud = (decimal)row["longitud"];
+            }
+
+            if (row.Table.Columns.Contains("postal_code") && row["postal_code"] is not null)
+            {
+                PEntrega.postal_code = (string)row["postal_code"];
+            }
+
+            if (row.Table.Columns.Contains("sublocality") && row["sublocality"] is not null)
+            {
+                PEntrega.sublocality = (string)row["sublocality"];
+            }
+
+            return PEntrega;
+        }
+
+        public Object GetRecoleccion(DataRow row)
+        {
+            RecoleccionModel PRecoleccion = new RecoleccionModel();
+
+            if (row.Table.Columns.Contains("record_id") && row["record_id"] is not null)
+            {
+                PRecoleccion.record_id = (string)row["record_id"];
+            }
+
+            if (row.Table.Columns.Contains("administrative_area") && row["administrative_area"] is not null)
+            {
+                PRecoleccion.administrative_area = (string)row["administrative_area"];
+            }
+
+            if (row.Table.Columns.Contains("country") && row["country"] is not null)
+            {
+                PRecoleccion.country = (string)row["country"];
+            }
+
+            if (row.Table.Columns.Contains("fecha") && row["fecha"] is not null)
+            {
+                PRecoleccion.fecha = (string)row["fecha"];
+            }
+
+            if (row.Table.Columns.Contains("hora") && row["hora"] is not null)
+            {
+                PRecoleccion.hora = (string)row["hora"];
+            }
+
+            if (row.Table.Columns.Contains("locality") && row["locality"] is not null)
+            {
+                PRecoleccion.locality = (string)row["locality"];
+            }
+
+            if (row.Table.Columns.Contains("latitud") && row["latitud"] is not null)
+            {
+                PRecoleccion.latitud = (decimal)row["latitud"];
+            }
+
+            if (row.Table.Columns.Contains("longitud") && row["longitud"] is not null)
+            {
+                PRecoleccion.longitud = (decimal)row["longitud"];
+            }
+
+            if (row.Table.Columns.Contains("postal_code") && row["postal_code"] is not null)
+            {
+                PRecoleccion.postal_code = (string)row["postal_code"];
+            }
+
+            if (row.Table.Columns.Contains("sublocality") && row["sublocality"] is not null)
+            {
+                PRecoleccion.sublocality = (string)row["sublocality"];
+            }
+
+            return PRecoleccion;
+        }
+
+        public Object GetConfigConfig(DataRow row)
+        {
+            ConfigConfigModel CConfig = new ConfigConfigModel();
+
+            if (row.Table.Columns.Contains("record_id") && row["record_id"] is not null)
+            {
+                CConfig.record_id = (string)row["record_id"];
+            }
+
+            if (row.Table.Columns.Contains("estatusCarga") && row["estatusCarga"] is not null)
+            {
+                CConfig.estatusCarga = (string)row["estatusCarga"];
+            }
+
+            if (row.Table.Columns.Contains("fechaActualizacion") && row["fechaActualizacion"] is not null)
+            {
+                CConfig.fechaActualizacion = (string)row["fechaActualizacion"];
+            }
+
+            if (row.Table.Columns.Contains("fechaCreado") && row["fechaCreado"] is not null)
+            {
+                CConfig.fechaCreado = (string)row["fechaCreado"];
+            }
+
+            if (row.Table.Columns.Contains("notificacionOferta") && row["notificacionOferta"] is not null)
+            {
+                CConfig.notificacionOferta = (Boolean)row["notificacionOferta"];
+            }
+
+            return CConfig;
+        }
+
+        public Object GetDetalleRemolque(DataRow row)
+        {
+            RemolqueDetalleModel DRemolque = new RemolqueDetalleModel();
+
+            if (row.Table.Columns.Contains("record_id") && row["record_id"] is not null)
+            {
+                DRemolque.record_id = (string)row["record_id"];
+            }
+
+            if (row.Table.Columns.Contains("alto") && row["alto"] is not null)
+            {
+                DRemolque.alto = (string)row["alto"];
+            }
+
+            if (row.Table.Columns.Contains("ancho") && row["ancho"] is not null)
+            {
+                DRemolque.ancho = (string)row["ancho"];
+            }
+
+            if (row.Table.Columns.Contains("contenedorTamano") && row["contenedorTamano"] is not null)
+            {
+                DRemolque.contenedorTamano = (string)row["contenedorTamano"];
+            }
+
+            if (row.Table.Columns.Contains("contenedorTipo") && row["contenedorTipo"] is not null)
+            {
+                DRemolque.contenedorTipo = (string)row["contenedorTipo"];
+            }
+
+            if (row.Table.Columns.Contains("embalaje") && row["embalaje"] is not null)
+            {
+                DRemolque.embalaje = (string)row["embalaje"];
+            }
+
+            if (row.Table.Columns.Contains("largo") && row["largo"] is not null)
+            {
+                DRemolque.largo = (string)row["largo"];
+            }
+
+            if (row.Table.Columns.Contains("peso") && row["peso"] is not null)
+            {
+                DRemolque.peso = (decimal)row["peso"];
+            }
+
+            if (row.Table.Columns.Contains("piezas") && row["piezas"] is not null)
+            {
+                DRemolque.piezas = (string)row["piezas"];
+            }
+
+            if (row.Table.Columns.Contains("volumen") && row["volumen"] is not null)
+            {
+                DRemolque.volumen = (decimal)row["peso"];
+            }
+
+            return DRemolque;
         }
     }
 }

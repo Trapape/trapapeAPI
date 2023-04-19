@@ -102,11 +102,37 @@ namespace ApiTrapAppE.Controllers
                 var fullPath = Path.GetFullPath(nombre);
                 client.DownloadFileTaskAsync(URLExcel, fullPath);
 
-             
 
-                return "Carga Exitosa";
+                ResponseModel response = new ResponseModel();
+                    List<DataLoadsModel> ListData = new List<DataLoadsModel>();
+
+                    var procesaExcel = new ProcesaExcelController();
+
+                    response.isSucces = true;
+                    response.URLExcel = "";
+                    response.message = "No aplica.";
+
+                 //   ListData = procesaExcel.ProcesaExcel(Objfile.file, nombre, response);
+
+                    response.Data = ListData.ToArray();
+
+                    return JsonConvert.SerializeObject(response);
             }
             catch (Exception ex) 
+            {
+                return ex.Message.ToString();
+            }
+        }
+
+        [HttpGet]
+        [Route("api/GetPrueba")]
+        public async Task<string> GetPrueba(string parametro_prueba)
+        {
+            try
+            {
+                return "Get exitoso, parametro: " + parametro_prueba;
+            }
+            catch (Exception ex)
             {
                 return ex.Message.ToString();
             }

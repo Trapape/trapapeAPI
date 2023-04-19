@@ -3,8 +3,8 @@
     public class PuntoModel
     {
 
-        public EntregaModel entrega { get; set; }
-        public RecoleccionModel recoleccion { get; set; }
+        public PuntoDetalleModel entrega { get; set; }
+        public PuntoDetalleModel recoleccion { get; set; }
 
     }
 }

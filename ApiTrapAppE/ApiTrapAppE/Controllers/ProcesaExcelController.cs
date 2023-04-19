@@ -9,6 +9,8 @@ using FireSharp.Config;
 using FireSharp.Interfaces;
 using FireSharp.Response;
 using System.Data;
+using System.Timers;
+using System.Linq;
 
 namespace ApiTrapAppE.Controllers
 {
@@ -33,9 +35,10 @@ namespace ApiTrapAppE.Controllers
             cliente = new FirebaseClient(config);
         }
 
-        public string ProcesaExcel([FromForm] IFormFile ArchivoExcel, string NombreArchivo)
+        public List<DataLoadsModel> ProcesaExcel([FromForm] IFormFile ArchivoExcel, string NombreArchivo, ResponseModel response)
         {
             Stream stream = ArchivoExcel.OpenReadStream();
+            List<DataLoadsModel> ListData = new List<DataLoadsModel>();
 
             IWorkbook MiExcel = null;
 
@@ -78,10 +81,10 @@ namespace ApiTrapAppE.Controllers
                     InsertaTabla(dtExcelData, fila, fila.LastCellNum);
                 }
 
-                GeneraLoad(dtExcelData, NombreArchivo);
+                ListData = GeneraLoad(dtExcelData, NombreArchivo);
             }
 
-            return JsonConvert.SerializeObject(Load);
+            return ListData;
         }
 
         public DataTable GeneraTabla(IRow dr, int intdtcolumn)
@@ -118,9 +121,13 @@ namespace ApiTrapAppE.Controllers
             return dtExcelData;
         }
 
-        public string GeneraLoad(DataTable dtExcelData, string NombreArchivo)
+        public List<DataLoadsModel> GeneraLoad(DataTable dtExcelData, string NombreArchivo)
         {
-            if(dtExcelData.Rows.Count > 0)
+            var message = "";
+            List<DataLoadsModel> ListData = new List<DataLoadsModel>();
+            DataLoadsModel dataLoads = new DataLoadsModel();
+
+            if (dtExcelData.Rows.Count > 0)
             {
                 foreach (DataRow row in dtExcelData.Rows)
                 {
@@ -163,11 +170,26 @@ namespace ApiTrapAppE.Controllers
 
                     Object Loadfila = Load[0];
 
-                    SubirInfo(Loadfila, Convert.ToString(IdGenerado));
+                    message = SubirInfo(Loadfila, Convert.ToString(IdGenerado));
+
+                    if (message == "Id Cargado")
+                    {
+                        dataLoads.isSucces = true;
+                    }
+                    else
+                    {
+                        dataLoads.isSucces = false;
+                    }
+
+                    dataLoads.message = message;
+                    dataLoads.idLoad = Convert.ToString(IdGenerado);
+                    dataLoads.Load = Load[0];
+
+                    ListData.Add(dataLoads);
                 }
             }
 
-            return "Carga Exitosas";
+            return ListData;
         }
 
         public string SubirInfo(Object Load, string IdGenerado)
@@ -176,7 +198,7 @@ namespace ApiTrapAppE.Controllers
 
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
-                return "Carga Exitosa";
+                return "Id Cargado";
             }
             else
             {
@@ -189,8 +211,8 @@ namespace ApiTrapAppE.Controllers
             List<PuntoModel> Punto = new List<PuntoModel>();
             Punto.Add(new PuntoModel
             {
-                    entrega = (EntregaModel)GetEntrega(row)
-                ,   recoleccion = (RecoleccionModel)GetRecoleccion(row)
+                    entrega = (PuntoDetalleModel)GetEntrega(row)
+                ,   recoleccion = (PuntoDetalleModel)GetRecoleccion(row)
 
             });
 
@@ -223,7 +245,8 @@ namespace ApiTrapAppE.Controllers
 
         public Object GetEntrega(DataRow row)
         {
-            EntregaModel PEntrega = new EntregaModel();
+            PuntoDetalleModel PEntrega = new PuntoDetalleModel();
+            LocationModel location = new LocationModel();
 
             if (row.Table.Columns.Contains("record_id") && row["record_id"] is not null)
             {
@@ -257,13 +280,15 @@ namespace ApiTrapAppE.Controllers
 
             if (row.Table.Columns.Contains("latitud") && row["latitud"] is not null)
             {
-                PEntrega.latitud = (decimal)row["latitud"];
+                location.latitud = (decimal)row["latitud"];
             }
 
             if (row.Table.Columns.Contains("longitud") && row["longitud"] is not null)
             {
-                PEntrega.longitud = (decimal)row["longitud"];
+                location.longitud = (decimal)row["longitud"];
             }
+
+            PEntrega.location = location;
 
             if (row.Table.Columns.Contains("postal_code") && row["postal_code"] is not null)
             {
@@ -280,7 +305,8 @@ namespace ApiTrapAppE.Controllers
 
         public Object GetRecoleccion(DataRow row)
         {
-            RecoleccionModel PRecoleccion = new RecoleccionModel();
+            PuntoDetalleModel PRecoleccion = new PuntoDetalleModel();
+            LocationModel location = new LocationModel();
 
             if (row.Table.Columns.Contains("record_id") && row["record_id"] is not null)
             {
@@ -314,13 +340,15 @@ namespace ApiTrapAppE.Controllers
 
             if (row.Table.Columns.Contains("latitud") && row["latitud"] is not null)
             {
-                PRecoleccion.latitud = (decimal)row["latitud"];
+                location.latitud = (decimal)row["latitud"];
             }
 
             if (row.Table.Columns.Contains("longitud") && row["longitud"] is not null)
             {
-                PRecoleccion.longitud = (decimal)row["longitud"];
+                location.longitud = (decimal)row["longitud"];
             }
+
+            PRecoleccion.location = location;
 
             if (row.Table.Columns.Contains("postal_code") && row["postal_code"] is not null)
             {

@@ -1,17 +1,16 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using System.Text.RegularExpressions;
+﻿using Microsoft.AspNetCore.Mvc;
 
 using Firebase.Auth;
 using Firebase.Storage;
+using System.Net;
+using System;
+using System.IO;
 using static System.Net.Mime.MediaTypeNames;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
 using ApiTrapAppE.Models;
+using Newtonsoft.Json;
 
 namespace ApiTrapAppE.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
     public class CargaExcelController : ControllerBase
     {
@@ -26,6 +25,7 @@ namespace ApiTrapAppE.Controllers
         }
 
         [HttpPost]
+        [Route("api/CargaExcel")]
         public async Task<string> Post([FromForm] excel Objfile) 
         {
             try
@@ -39,6 +39,9 @@ namespace ApiTrapAppE.Controllers
                     string api_key = "AIzaSyBs-iRGy4GQdnqmLrDqMSV8sIcraM9kXl4";
 
                     Stream archivo = Objfile.file.OpenReadStream();
+
+                    ResponseModel response = new ResponseModel();
+                    List<DataLoadsModel> ListData = new List<DataLoadsModel>();
 
                     string ext = Path.GetExtension(Objfile.file.FileName);
                     Guid IdDoucumento = Guid.NewGuid();
@@ -64,16 +67,46 @@ namespace ApiTrapAppE.Controllers
                     var downloadURL = await task;
 
                     var procesaExcel = new ProcesaExcelController();
-                    
-                    string result = procesaExcel.ProcesaExcel(Objfile.file, nombre);
 
-                    return downloadURL;
+                    response.isSucces = true;
+                    response.URLExcel = downloadURL;
+                    response.message = "Excel cargado correctamente.";
+
+                    ListData = procesaExcel.ProcesaExcel(Objfile.file, nombre, response);
+
+                    response.Data = ListData.ToArray();
+
+                    return JsonConvert.SerializeObject(response);
                 }
                 else
                 {
                     return "No se cargo el archivo correctamente.";
                 }
             }catch (Exception ex)
+            {
+                return ex.Message.ToString();
+            }
+        }
+
+        [HttpPost]
+        [Route("api/DownloadExcel")]
+        public async Task<string> DownloadExcel(string URLExcel)
+        {
+            try 
+            {
+                var client = new WebClient();
+
+                Guid IdDoucumento = Guid.NewGuid();
+
+                string nombre = IdDoucumento + ".xlsx";
+                var fullPath = Path.GetFullPath(nombre);
+                client.DownloadFileTaskAsync(URLExcel, fullPath);
+
+             
+
+                return "Carga Exitosa";
+            }
+            catch (Exception ex) 
             {
                 return ex.Message.ToString();
             }

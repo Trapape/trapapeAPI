@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33516.290
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiTrapAppE", "ApiTrapAppE\ApiTrapAppE.csproj", "{CDBB7C08-38C7-43B1-9E3F-96DFB39A2189}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CDBB7C08-38C7-43B1-9E3F-96DFB39A2189}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CDBB7C08-38C7-43B1-9E3F-96DFB39A2189}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CDBB7C08-38C7-43B1-9E3F-96DFB39A2189}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CDBB7C08-38C7-43B1-9E3F-96DFB39A2189}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F2ED28E5-75D5-40A9-8B4E-4BDECE4E9F4F}
+	EndGlobalSection
+EndGlobal

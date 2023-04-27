@@ -3,11 +3,11 @@
 using Firebase.Auth;
 using Firebase.Storage;
 using System.Net;
-using System;
-using System.IO;
-using static System.Net.Mime.MediaTypeNames;
 using ApiTrapAppE.Models;
 using Newtonsoft.Json;
+using System.Xml.Linq;
+using System.Security.Policy;
+using System;
 
 namespace ApiTrapAppE.Controllers
 {
@@ -24,9 +24,16 @@ namespace ApiTrapAppE.Controllers
             public string namefile { get; set; }
         }
 
+        public static IWebHostEnvironment _env { get; set; }
+
+        public CargaExcelController(IWebHostEnvironment env)
+        {
+            _env = env;
+        }
+
         [HttpPost]
         [Route("api/CargaExcel")]
-        public async Task<string> Post([FromForm] excel Objfile) 
+        public async Task<string> Post([FromForm] excel Objfile, [FromForm] string userConsig) 
         {
             try
             {
@@ -72,7 +79,7 @@ namespace ApiTrapAppE.Controllers
                     response.URLExcel = downloadURL;
                     response.message = "Excel cargado correctamente.";
 
-                    ListData = procesaExcel.ProcesaExcel(Objfile.file, nombre, response);
+                    ListData = procesaExcel.ProcesaExcel(Objfile.file, nombre, response, userConsig);
 
                     response.Data = ListData.ToArray();
 
@@ -90,7 +97,7 @@ namespace ApiTrapAppE.Controllers
 
         [HttpPost]
         [Route("api/DownloadExcel")]
-        public async Task<string> DownloadExcel(string URLExcel)
+        public async Task<string> DownloadExcel(string URLExcel, string userConsig)
         {
             try 
             {
@@ -99,18 +106,25 @@ namespace ApiTrapAppE.Controllers
                 Guid IdDoucumento = Guid.NewGuid();
 
                 string nombre = IdDoucumento + ".xlsx";
-                var fullPath = Path.GetFullPath(nombre);
+
+                var path = _env.WebRootPath + "\\Excel\\";
+                var fullPath = path + nombre;
+
+                if (!Directory.Exists(path))
+                {
+                    Directory.CreateDirectory(path);
+                }
+
                 client.DownloadFileTaskAsync(URLExcel, fullPath);
 
-
                 ResponseModel response = new ResponseModel();
-                    List<DataLoadsModel> ListData = new List<DataLoadsModel>();
+                List<DataLoadsModel> ListData = new List<DataLoadsModel>();
 
-                    var procesaExcel = new ProcesaExcelController();
+                var procesaExcel = new ProcesaExcelController();
 
-                    response.isSucces = true;
-                    response.URLExcel = "";
-                    response.message = "No aplica.";
+                response.isSucces = true;
+                response.URLExcel = "";
+                response.message = "Documento Procesado.";
 
                  //   ListData = procesaExcel.ProcesaExcel(Objfile.file, nombre, response);
 

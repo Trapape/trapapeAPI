@@ -101,21 +101,50 @@ namespace ApiTrapAppE.Controllers
         {
             try 
             {
-                var client = new WebClient();
+                var _urlsplit = URLExcel.Split("/");
+                var url = _urlsplit[_urlsplit.Length - 1];
+                _urlsplit = url.Split("?");
 
-                Guid IdDoucumento = Guid.NewGuid();
-
-                string nombre = IdDoucumento + ".xlsx";
-
+                string nombre = "";
                 var path = _env.WebRootPath + "\\Excel\\";
-                var fullPath = path + nombre;
+
+                foreach (var item in _urlsplit)
+                {
+                    if (item.Contains(".xlsx"))
+                    {
+                        nombre = item;
+                    }
+                }
 
                 if (!Directory.Exists(path))
                 {
                     Directory.CreateDirectory(path);
                 }
 
-                client.DownloadFileTaskAsync(URLExcel, fullPath);
+                var webClient = new WebClient();
+
+                string user = "cargaeexcel@gmail.com";
+                string pass = "tr4p4p3AP1#";
+                string ruta = "trapape.appspot.com";
+                string api_key = "AIzaSyBs-iRGy4GQdnqmLrDqMSV8sIcraM9kXl4";
+
+
+                var auth = new FirebaseAuthProvider(new FirebaseConfig(api_key));
+                var access = await auth.SignInWithEmailAndPasswordAsync(user, pass);
+
+                var cancellation = new CancellationTokenSource();
+
+                var task = new FirebaseStorage(
+                        ruta,
+                        new FirebaseStorageOptions
+                        {
+                            AuthTokenAsyncFactory = () => Task.FromResult(access.FirebaseToken),
+                            ThrowOnCancel = true
+                        })
+                        .Child("media/proj_meqjHnqVDFjzhizHdj6Fjq/app_1pAvW9AC5LiQYhzw2dpdJw/dataApplications")
+                        .Child(nombre)
+                        .GetDownloadUrlAsync().GetAwaiter().GetResult();    
+
 
                 ResponseModel response = new ResponseModel();
                 List<DataLoadsModel> ListData = new List<DataLoadsModel>();
@@ -128,16 +157,16 @@ namespace ApiTrapAppE.Controllers
 
                  //   ListData = procesaExcel.ProcesaExcel(Objfile.file, nombre, response);
 
-                    response.Data = ListData.ToArray();
+                response.Data = ListData.ToArray();
 
-                    return JsonConvert.SerializeObject(response);
+                return JsonConvert.SerializeObject(response);
             }
             catch (Exception ex) 
             {
                 return ex.Message.ToString();
             }
         }
-
+        
         [HttpGet]
         [Route("api/GetPrueba")]
         public async Task<string> GetPrueba(string parametro_prueba)

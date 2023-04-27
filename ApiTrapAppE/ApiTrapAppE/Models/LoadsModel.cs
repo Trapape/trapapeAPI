@@ -11,7 +11,7 @@
         public Boolean foto2 { get; set; }
         public Boolean foto3 { get; set; }
         public Boolean fotos { get; set; }
-        public int numRemolques { get; set; }
+        public string numRemolques { get; set; }
         public Decimal precioViaje { get; set; }
         public Boolean recibirOfertas { get; set; }
         public Boolean recomenEstibar { get; set; }

@@ -16,6 +16,8 @@ using System.Net;
 using System.Xml.Linq;
 using NPOI.SS.Formula.Functions;
 using NPOI.POIFS.FileSystem;
+using static System.Net.WebRequestMethods;
+using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace ApiTrapAppE.Controllers
 {
@@ -34,7 +36,6 @@ namespace ApiTrapAppE.Controllers
             {
                 AuthSecret = "ROXWHVG92cDBzvSNLDp76a4WMXgQdW36NoWnxKVi",
                 BasePath = "https://trapape-default-rtdb.firebaseio.com/"
-
             };
 
             cliente = new FirebaseClient(config);
@@ -67,12 +68,12 @@ namespace ApiTrapAppE.Controllers
                 ISheet HojaExcel = MiExcel.GetSheetAt(hoja);
                 int cantidadFilas = HojaExcel.LastRowNum;
 
-                if(cantidadFilas == 0)
+                if (cantidadFilas == 0)
                 {
                     continue;
                 }
 
-                int cuerpoFilas = 0;
+                int intdtcolumn = HojaExcel.GetRow(0).LastCellNum;
                 DataTable dtExcelData = GeneraTabla(HojaExcel.GetRow(0), HojaExcel.GetRow(0).LastCellNum);
 
                 for (int ifila = 0; ifila <= cantidadFilas; ifila++)
@@ -84,7 +85,7 @@ namespace ApiTrapAppE.Controllers
                         continue;
                     }
 
-                    InsertaTabla(dtExcelData, fila, fila.LastCellNum);
+                    InsertaTabla(dtExcelData, fila, intdtcolumn);
                 }
 
                 ListData = GeneraLoad(dtExcelData, NombreArchivo, userConsig);
@@ -94,7 +95,6 @@ namespace ApiTrapAppE.Controllers
                     ListDataMaster.Add(item);
                 }
             }
-
 
             return ListDataMaster;
         }
@@ -118,13 +118,16 @@ namespace ApiTrapAppE.Controllers
 
             for (int icolumn = 0; icolumn < intdtcolumn; icolumn++)
             {
-                if(dr.GetCell(icolumn) == null)
+                if (dr is not null)
                 {
-                    renglon[icolumn] = "";
-                }
-                else
-                {
-                    renglon[icolumn] = dr.GetCell(icolumn).ToString();
+                    if (dr.GetCell(icolumn) == null)
+                    {
+                        renglon[icolumn] = "";
+                    }
+                    else
+                    {
+                        renglon[icolumn] = dr.GetCell(icolumn).ToString();
+                    }
                 }
             }
 
@@ -144,43 +147,137 @@ namespace ApiTrapAppE.Controllers
                 foreach (DataRow row in dtExcelData.Rows)
                 {
                     string cargaDescripcion;
-                    List<LoadsModel> Load = new List<LoadsModel>();
+                    int contador_error = 0;
+                    List<LoadsModel> Loads = new List<LoadsModel>();
+
+                    LoadsModel load = new LoadsModel();
 
                     Guid IdGenerado = Guid.NewGuid();
 
-                    Load.Add(new LoadsModel
+                    load.IdLoad = Convert.ToString(IdGenerado);
+
+                    if (row.Table.Columns.Contains("cargaDescripcion") && row.Field<string>("cargaDescripcion") is not null && row.Field<string>("cargaDescripcion") != "")
                     {
-                            IdLoad = Convert.ToString(IdGenerado)
-                        ,   cargaDescripcion = Convert.ToString(row.Field<string>("cargaDescripcion"))
-                        ,   cargaRefrigerada = Convert.ToBoolean(row.Field<string>("cargaRefrigerada"))
-                        ,   cargaTitulo = Convert.ToString(row.Field<string>("cargaTitulo"))
-                        ,   distanciaKM = Convert.ToDecimal(row.Field<string>("distanciaKM"))
-                        ,   foto1 = Convert.ToBoolean(row.Field<string>("foto1"))
-                        ,   foto2 = Convert.ToBoolean(row.Field<string>("foto2"))
-                        ,   foto3 = Convert.ToBoolean(row.Field<string>("foto3"))
-                        ,   fotos = Convert.ToBoolean(row.Field<string>("fotos"))
-                        ,   numRemolques = Convert.ToInt32(row.Field<string>("numRemolques"))
-                        ,   precioViaje = Convert.ToDecimal(row.Field<string>("precioViaje"))
-                        ,   recibirOfertas = Convert.ToBoolean(row.Field<string>("recibirOfertas"))
-                        ,   recomenEstibar = Convert.ToBoolean(row.Field<string>("recomenEstibar"))
-                        ,   recomenFragil = Convert.ToBoolean(row.Field<string>("recomenFragil"))
-                        ,   recomenManejoCuidado = Convert.ToBoolean(row.Field<string>("recomenManejoCuidado"))
-                        ,   recomenMantenerSeco = Convert.ToBoolean(row.Field<string>("recomenMantenerSeco"))
-                        ,   seguroCarga = Convert.ToString(row.Field<string>("seguroCarga"))
-                        ,   tiempoRuta = Convert.ToString(row.Field<string>("tiempoRuta"))
-                        ,   tipoCarga = Convert.ToString(row.Field<string>("tipoCarga"))
-                        ,   tipoUnidad = Convert.ToString(row.Field<string>("tipoUnidad"))
-                        ,   userConsig = userConsig
-                        ,   userOperador = Convert.ToString(row.Field<string>("userOperador"))
-                        ,   userTranspor = Convert.ToString(row.Field<string>("userTranspor"))
-                        ,   Punto = GetPunto(row)
-                        ,   Remolque = GetRemolque(row)
-                        ,   config = GetConfig(row)
-                        ,   nombreExcel = NombreArchivo
+                        load.cargaDescripcion = (string)row["cargaDescripcion"];
+                    }
+                    else
+                    {
+                        contador_error += 1;
+                    }
 
-                    });
+                    if (row.Table.Columns.Contains("cargaRefrigerada") && row.Field<string>("cargaRefrigerada") is not null && row.Field<string>("cargaRefrigerada") != "")
+                    {
+                        load.cargaRefrigerada = Convert.ToBoolean((string)row["cargaRefrigerada"]);
+                    }
+                    else
+                    {
+                        contador_error += 1;
+                    }
 
-                    Object Loadfila = Load[0];
+                    if (row.Table.Columns.Contains("cargaTitulo") && row.Field<string>("cargaTitulo") is not null && row.Field<string>("cargaTitulo") != "")
+                    {
+                        load.cargaTitulo = (string)row["cargaTitulo"];
+                    }
+                    else
+                    {
+                        contador_error += 1;
+                    }
+
+                    if (row.Table.Columns.Contains("numRemolques") && row.Field<string>("numRemolques") is not null && row.Field<string>("numRemolques") != "")
+                    {
+                        load.numRemolques = (string)row["numRemolques"];
+                    }
+                    else
+                    {
+                        contador_error += 1;
+                    }
+
+                    if (row.Table.Columns.Contains("precioViaje") && row.Field<string>("precioViaje") is not null && row.Field<string>("precioViaje") != "")
+                    {
+                        load.precioViaje = Convert.ToDecimal((string)row["precioViaje"]);
+                    }
+                    else
+                    {
+                        contador_error += 1;
+                    }
+
+                    if (row.Table.Columns.Contains("recibirOfertas") && row.Field<string>("recibirOfertas") is not null && row.Field<string>("recibirOfertas") != "")
+                    {
+                        load.recibirOfertas = Convert.ToBoolean((string)row["recibirOfertas"]);
+                    }
+                    else
+                    {
+                        contador_error += 1;
+                    }
+
+                    if (row.Table.Columns.Contains("recomenEstibar") && row.Field<string>("recomenEstibar") is not null && row.Field<string>("recomenEstibar") != "")
+                    {
+                        load.recomenEstibar = Convert.ToBoolean((string)row["recomenEstibar"]);
+                    }
+                    else
+                    {
+                        contador_error += 1;
+                    }
+
+                    if (row.Table.Columns.Contains("recomenFragil") && row.Field<string>("recomenFragil") is not null && row.Field<string>("recomenFragil") != "")
+                    {
+                        load.recomenFragil = Convert.ToBoolean((string)row["recomenFragil"]);
+                    }
+                    else
+                    {
+                        contador_error += 1;
+                    }
+
+                    if (row.Table.Columns.Contains("recomenManejoCuidado") && row.Field<string>("recomenManejoCuidado") is not null && row.Field<string>("recomenManejoCuidado") != "")
+                    {
+                        load.recomenManejoCuidado = Convert.ToBoolean((string)row["recomenManejoCuidado"]);
+                    }
+                    else
+                    {
+                        contador_error += 1;
+                    }
+
+                    if (row.Table.Columns.Contains("recomenMantenerSeco") && row.Field<string>("recomenMantenerSeco") is not null && row.Field<string>("recomenMantenerSeco") != "")
+                    {
+                        load.recomenMantenerSeco = Convert.ToBoolean((string)row["recomenMantenerSeco"]);
+                    }
+                    else
+                    {
+                        contador_error += 1;
+                    }
+
+                    if (row.Table.Columns.Contains("tipoCarga") && row.Field<string>("tipoCarga") is not null && row.Field<string>("tipoCarga") != "")
+                    {
+                        load.tipoCarga = (string)row["tipoCarga"];
+                    }
+                    else
+                    {
+                        contador_error += 1;
+                    }
+
+                    if (row.Table.Columns.Contains("tipoUnidad") && row.Field<string>("tipoUnidad") is not null && row.Field<string>("tipoUnidad") != "")
+                    {
+                        load.tipoUnidad = (string)row["tipoUnidad"];
+                    }
+                    else
+                    {
+                        contador_error += 1;
+                    }
+
+                    if(contador_error > 8)
+                    {
+                        continue;
+                    }
+
+                    load.userConsig = userConsig;
+                    load.Punto = GetPunto(row);
+                    load.Remolque = GetRemolque(row);
+                    load.config = GetConfig(row);
+                    load.nombreExcel = NombreArchivo;
+
+                    Loads.Add(load);
+
+                    Object Loadfila = Loads[0];
 
                     message = SubirInfo(Loadfila, Convert.ToString(IdGenerado));
 
@@ -195,7 +292,7 @@ namespace ApiTrapAppE.Controllers
 
                     dataLoads.message = message;
                     dataLoads.idLoad = Convert.ToString(IdGenerado);
-                    dataLoads.Load = Load[0];
+                    dataLoads.Load = Loads[0];
 
                     ListData.Add(dataLoads);
                 }
@@ -437,7 +534,7 @@ namespace ApiTrapAppE.Controllers
 
             if (row.Table.Columns.Contains("rem1_peso") && row["rem1_peso"] is not null)
             {
-                DRemolque.peso = (decimal)row["rem1_peso"];
+                DRemolque.peso = (string)row["rem1_peso"];
             }
 
             if (row.Table.Columns.Contains("rem1_piezas") && row["rem1_piezas"] is not null)
@@ -447,7 +544,7 @@ namespace ApiTrapAppE.Controllers
 
             if (row.Table.Columns.Contains("rem1_volumen") && row["rem1_volumen"] is not null)
             {
-                DRemolque.volumen = (decimal)row["rem1_volumen"];
+                DRemolque.volumen = (string)row["rem1_volumen"];
             }
 
             return DRemolque;
@@ -494,7 +591,7 @@ namespace ApiTrapAppE.Controllers
 
             if (row.Table.Columns.Contains("rem2_peso") && row["rem2_peso"] is not null)
             {
-                DRemolque.peso = (decimal)row["rem2_peso"];
+                DRemolque.peso = (string)row["rem2_peso"];
             }
 
             if (row.Table.Columns.Contains("rem2_piezas") && row["rem2_piezas"] is not null)
@@ -504,7 +601,7 @@ namespace ApiTrapAppE.Controllers
 
             if (row.Table.Columns.Contains("rem2_volumen") && row["rem2_volumen"] is not null)
             {
-                DRemolque.volumen = (decimal)row["rem2_volumen"];
+                DRemolque.volumen = (string)row["rem2_volumen"];
             }
 
             return DRemolque;

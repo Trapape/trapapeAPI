@@ -9,8 +9,8 @@
         public String contenedorTipo { get; set; }
         public String embalaje { get; set; }
         public String largo { get; set; }
-        public Decimal peso { get; set; }
+        public String peso { get; set; }
         public String piezas { get; set; }
-        public Decimal volumen { get; set; }
+        public String volumen { get; set; }
     }
 }

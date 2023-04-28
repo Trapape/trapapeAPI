@@ -106,7 +106,6 @@ namespace ApiTrapAppE.Controllers
                 _urlsplit = url.Split("?");
 
                 string nombre = "";
-                var path = _env.WebRootPath + "\\Excel\\";
 
                 foreach (var item in _urlsplit)
                 {
@@ -115,13 +114,6 @@ namespace ApiTrapAppE.Controllers
                         nombre = item;
                     }
                 }
-
-                if (!Directory.Exists(path))
-                {
-                    Directory.CreateDirectory(path);
-                }
-
-                var webClient = new WebClient();
 
                 string user = "cargaeexcel@gmail.com";
                 string pass = "tr4p4p3AP1#";
@@ -143,8 +135,15 @@ namespace ApiTrapAppE.Controllers
                         })
                         .Child("media/proj_meqjHnqVDFjzhizHdj6Fjq/app_1pAvW9AC5LiQYhzw2dpdJw/dataApplications")
                         .Child(nombre)
-                        .GetDownloadUrlAsync().GetAwaiter().GetResult();    
+                        .GetDownloadUrlAsync().GetAwaiter().GetResult();
 
+                Stream stream = null;
+                string strURL = URLExcel;
+                HttpClient client = new HttpClient();
+                HttpResponseMessage httpResponse = await client.GetAsync(task);
+                Stream streamToReadFrom = await httpResponse.Content.ReadAsStreamAsync();
+
+                IFormFile Objfile = new FormFile(streamToReadFrom, 0, streamToReadFrom.Length, nombre.Replace(".xlsx", ""), nombre);
 
                 ResponseModel response = new ResponseModel();
                 List<DataLoadsModel> ListData = new List<DataLoadsModel>();
@@ -155,7 +154,7 @@ namespace ApiTrapAppE.Controllers
                 response.URLExcel = "";
                 response.message = "Documento Procesado.";
 
-                 //   ListData = procesaExcel.ProcesaExcel(Objfile.file, nombre, response);
+                ListData = procesaExcel.ProcesaExcel(Objfile, nombre, response, userConsig);
 
                 response.Data = ListData.ToArray();
 
@@ -166,7 +165,7 @@ namespace ApiTrapAppE.Controllers
                 return ex.Message.ToString();
             }
         }
-        
+
         [HttpGet]
         [Route("api/GetPrueba")]
         public async Task<string> GetPrueba(string parametro_prueba)

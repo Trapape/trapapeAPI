@@ -106,7 +106,8 @@ namespace ApiTrapAppE.Controllers
                 _urlsplit = url.Split("?");
 
                 string nombre = "";
-                var path = _env.WebRootPath + "\\Excel\\";
+                //var path = _env.WebRootPath + "\\Excel\\";
+                var path = Path.Combine(Environment.GetEnvironmentVariable("HOME"), "site", "wwwroot", "Excel");
 
                 foreach (var item in _urlsplit)
                 {

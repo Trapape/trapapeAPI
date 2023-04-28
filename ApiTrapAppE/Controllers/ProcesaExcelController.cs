@@ -483,7 +483,7 @@ namespace ApiTrapAppE.Controllers
             {
                 CConfig.notificacionOferta = (Boolean)row["notificacionOferta"];
             }
-
+            CConfig.estatusCarga = "Publicada";
             return CConfig;
         }
 

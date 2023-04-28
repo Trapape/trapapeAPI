@@ -333,8 +333,8 @@ namespace ApiTrapAppE.Controllers
             List<RemolqueModel> Punto = new List<RemolqueModel>();
             Punto.Add(new RemolqueModel
             {
-                    remolque1 = (RemolqueDetalleModel)GetDetalleRemolque1(row)
-                ,   remolque2 = (RemolqueDetalleModel)GetDetalleRemolque2(row)
+                    uno = (RemolqueDetalleModel)GetDetalleRemolque1(row)
+                ,   dos = (RemolqueDetalleModel)GetDetalleRemolque2(row)
 
             });
 

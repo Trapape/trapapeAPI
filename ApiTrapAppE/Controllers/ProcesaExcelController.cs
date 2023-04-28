@@ -9,15 +9,9 @@ using FireSharp.Config;
 using FireSharp.Interfaces;
 using FireSharp.Response;
 using System.Data;
-using System.Timers;
-using System.Linq;
-using System.Text;
 using System.Net;
 using System.Xml.Linq;
-using NPOI.SS.Formula.Functions;
-using NPOI.POIFS.FileSystem;
-using static System.Net.WebRequestMethods;
-using static Org.BouncyCastle.Math.EC.ECCurve;
+using System.Xml;
 
 namespace ApiTrapAppE.Controllers
 {
@@ -618,6 +612,9 @@ namespace ApiTrapAppE.Controllers
 
             WebRequest request = WebRequest.Create(requestUri);
             WebResponse response = request.GetResponse();
+
+            var respmaps = response.GetResponseStream();
+
             XDocument xdoc = XDocument.Load(response.GetResponseStream());
 
             XElement result = xdoc.Element("GeocodeResponse").Element("result");
@@ -630,6 +627,5 @@ namespace ApiTrapAppE.Controllers
 
             return location;
         }
-
     }
 }

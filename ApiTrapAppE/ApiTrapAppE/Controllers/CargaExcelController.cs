@@ -148,6 +148,11 @@ namespace ApiTrapAppE.Controllers
                 HttpResponseMessage httpResponse = await client.GetAsync(task);
                 Stream streamToReadFrom = await httpResponse.Content.ReadAsStreamAsync();
 
+                if (!nombre.Contains(".xlsx"))
+                {
+                    nombre = nombre + ".xlsx";
+                }
+
                 IFormFile Objfile = new FormFile(streamToReadFrom, 0, streamToReadFrom.Length, nombre.Replace(".xlsx", ""), nombre);
 
                 ResponseModel response = new ResponseModel();

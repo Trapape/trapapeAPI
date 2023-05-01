@@ -101,6 +101,7 @@ namespace ApiTrapAppE.Controllers
         {
             try 
             {
+                URLExcel = URLExcel.Replace("%2F", "/");
                 var _urlsplit = URLExcel.Split("/");
                 var url = _urlsplit[_urlsplit.Length - 1];
                 _urlsplit = url.Split("?");

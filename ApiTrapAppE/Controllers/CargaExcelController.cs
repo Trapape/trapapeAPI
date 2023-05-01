@@ -67,7 +67,7 @@ namespace ApiTrapAppE.Controllers
                             AuthTokenAsyncFactory = () => Task.FromResult(access.FirebaseToken),
                             ThrowOnCancel = true
                         })
-                        .Child("media/proj_meqjHnqVDFjzhizHdj6Fjq/app_1pAvW9AC5LiQYhzw2dpdJw/dataApplications")
+                        .Child("media/proj_meqjHnqVDFjzhizHdj6Fjq/app_vjubyyTnE5REBNbo1HHscW/dataApplications")
                         .Child(nombre)
                         .PutAsync(archivo, cancellation.Token);
 
@@ -79,7 +79,7 @@ namespace ApiTrapAppE.Controllers
                     response.URLExcel = downloadURL;
                     response.message = "Excel cargado correctamente.";
 
-                    ListData = procesaExcel.ProcesaExcel(Objfile.file, nombre, response, userConsig);
+                    ListData = procesaExcel.ProcesaExcel(Objfile.file, nombre, response, userConsig, downloadURL);
 
                     response.Data = ListData.ToArray();
 
@@ -101,6 +101,7 @@ namespace ApiTrapAppE.Controllers
         {
             try 
             {
+                URLExcel = URLExcel.Replace("%2F", "/");
                 var _urlsplit = URLExcel.Split("/");
                 var url = _urlsplit[_urlsplit.Length - 1];
                 _urlsplit = url.Split("?");
@@ -110,6 +111,11 @@ namespace ApiTrapAppE.Controllers
                 foreach (var item in _urlsplit)
                 {
                     if (item.Contains(".xlsx"))
+                    {
+                        nombre = item;
+                    }
+
+                    if (nombre == "")
                     {
                         nombre = item;
                     }
@@ -133,7 +139,7 @@ namespace ApiTrapAppE.Controllers
                             AuthTokenAsyncFactory = () => Task.FromResult(access.FirebaseToken),
                             ThrowOnCancel = true
                         })
-                        .Child("media/proj_meqjHnqVDFjzhizHdj6Fjq/app_1pAvW9AC5LiQYhzw2dpdJw/dataApplications")
+                        .Child("media/proj_meqjHnqVDFjzhizHdj6Fjq/app_vjubyyTnE5REBNbo1HHscW/dataApplications")
                         .Child(nombre)
                         .GetDownloadUrlAsync().GetAwaiter().GetResult();
 
@@ -142,6 +148,11 @@ namespace ApiTrapAppE.Controllers
                 HttpClient client = new HttpClient();
                 HttpResponseMessage httpResponse = await client.GetAsync(task);
                 Stream streamToReadFrom = await httpResponse.Content.ReadAsStreamAsync();
+
+                if (!nombre.Contains(".xlsx"))
+                {
+                    nombre = nombre + ".xlsx";
+                }
 
                 IFormFile Objfile = new FormFile(streamToReadFrom, 0, streamToReadFrom.Length, nombre.Replace(".xlsx", ""), nombre);
 

@@ -2,7 +2,7 @@
 {
     public class LocationModel
     {
-        public Decimal latitud { get; set; }
-        public Decimal longitud { get; set; }
+        public Decimal latitude { get; set; }
+        public Decimal longitude { get; set; }
     }
 }

@@ -67,7 +67,7 @@ namespace ApiTrapAppE.Controllers
                             AuthTokenAsyncFactory = () => Task.FromResult(access.FirebaseToken),
                             ThrowOnCancel = true
                         })
-                        .Child("media/proj_meqjHnqVDFjzhizHdj6Fjq/app_1pAvW9AC5LiQYhzw2dpdJw/dataApplications")
+                        .Child("media/proj_meqjHnqVDFjzhizHdj6Fjq/app_vjubyyTnE5REBNbo1HHscW/dataApplications")
                         .Child(nombre)
                         .PutAsync(archivo, cancellation.Token);
 
@@ -79,7 +79,7 @@ namespace ApiTrapAppE.Controllers
                     response.URLExcel = downloadURL;
                     response.message = "Excel cargado correctamente.";
 
-                    ListData = procesaExcel.ProcesaExcel(Objfile.file, nombre, response, userConsig);
+                    ListData = procesaExcel.ProcesaExcel(Objfile.file, nombre, response, userConsig, downloadURL);
 
                     response.Data = ListData.ToArray();
 
@@ -113,6 +113,11 @@ namespace ApiTrapAppE.Controllers
                     {
                         nombre = item;
                     }
+
+                    if (nombre == "")
+                    {
+                        nombre = item;
+                    }
                 }
 
                 string user = "cargaeexcel@gmail.com";
@@ -133,7 +138,7 @@ namespace ApiTrapAppE.Controllers
                             AuthTokenAsyncFactory = () => Task.FromResult(access.FirebaseToken),
                             ThrowOnCancel = true
                         })
-                        .Child("media/proj_meqjHnqVDFjzhizHdj6Fjq/app_1pAvW9AC5LiQYhzw2dpdJw/dataApplications")
+                        .Child("media/proj_meqjHnqVDFjzhizHdj6Fjq/app_vjubyyTnE5REBNbo1HHscW/dataApplications")
                         .Child(nombre)
                         .GetDownloadUrlAsync().GetAwaiter().GetResult();
 

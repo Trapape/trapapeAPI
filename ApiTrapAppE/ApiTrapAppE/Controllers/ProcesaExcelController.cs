@@ -12,6 +12,15 @@ using System.Data;
 using System.Net;
 using System.Xml.Linq;
 using System.Xml;
+using NPOI.POIFS.Crypt.Dsig;
+using Newtonsoft.Json.Linq;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+using System.Text;
+using NPOI.SS.Formula.Functions;
+using System.Text.Json.Serialization;
+using NPOI.OpenXmlFormats.Spreadsheet;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace ApiTrapAppE.Controllers
 {
@@ -35,7 +44,7 @@ namespace ApiTrapAppE.Controllers
             cliente = new FirebaseClient(config);
         }
 
-        public List<DataLoadsModel> ProcesaExcel([FromForm] IFormFile ArchivoExcel, string NombreArchivo, ResponseModel response, string userConsig)
+        public List<DataLoadsModel> ProcesaExcel([FromForm] IFormFile ArchivoExcel, string NombreArchivo, ResponseModel response, string userConsig, string downloadURL = "")
         {
             Stream stream = ArchivoExcel.OpenReadStream();
             List<DataLoadsModel> ListData = new List<DataLoadsModel>();
@@ -82,7 +91,7 @@ namespace ApiTrapAppE.Controllers
                     InsertaTabla(dtExcelData, fila, intdtcolumn);
                 }
 
-                ListData = GeneraLoad(dtExcelData, NombreArchivo, userConsig);
+                ListData = GeneraLoad(dtExcelData, NombreArchivo, userConsig, downloadURL);
 
                 foreach (var item in ListData)
                 {
@@ -130,7 +139,7 @@ namespace ApiTrapAppE.Controllers
             return dtExcelData;
         }
 
-        public List<DataLoadsModel> GeneraLoad(DataTable dtExcelData, string NombreArchivo, string userConsig)
+        public List<DataLoadsModel> GeneraLoad(DataTable dtExcelData, string NombreArchivo, string userConsig, string downloadURL = "")
         {
             var message = "";
             List<DataLoadsModel> ListData = new List<DataLoadsModel>();
@@ -140,7 +149,6 @@ namespace ApiTrapAppE.Controllers
             {
                 foreach (DataRow row in dtExcelData.Rows)
                 {
-                    string cargaDescripcion;
                     int contador_error = 0;
                     List<LoadsModel> Loads = new List<LoadsModel>();
 
@@ -267,7 +275,29 @@ namespace ApiTrapAppE.Controllers
                     load.Punto = GetPunto(row);
                     load.Remolque = GetRemolque(row);
                     load.config = GetConfig(row);
-                    load.nombreExcel = NombreArchivo;
+                    load.nombreExcel = downloadURL;
+
+                    if (row.Table.Columns.Contains("distanciaKM") && row.Field<string>("distanciaKM") is not null && row.Field<string>("distanciaKM") != "")
+                    {
+                        load.distanciaKM = Convert.ToDecimal((string)row["distanciaKM"]);
+                    }
+                    else
+                    {
+                        decimal latitude_origen = load.Punto.recoleccion.location.latitude;
+                        decimal longitude_origen = load.Punto.recoleccion.location.longitude;
+                        decimal latitude_destino = load.Punto.entrega.location.latitude;
+                        decimal longitude_destino = load.Punto.entrega.location.longitude;
+
+                        string distancia_tiempo = Calcula_Time_KM(latitude_origen, longitude_origen, latitude_destino, longitude_destino);
+
+                        int distanciaMetros = Convert.ToInt32(distancia_tiempo.Split(",")[0]);
+
+                        load.distanciaKM = Convert.ToDecimal(distanciaMetros / 1000);
+
+                        int duration = Convert.ToInt32(distancia_tiempo.Split(",")[1]);
+
+                        load.tiempoRuta = Convert.ToString(Math.Round((duration * 2.3), 2));
+                    }
 
                     Loads.Add(load);
 
@@ -349,6 +379,9 @@ namespace ApiTrapAppE.Controllers
         public Object GetEntrega(DataRow row)
         {
             PuntoDetalleModel PEntrega = new PuntoDetalleModel();
+            LocationModel location = new LocationModel();
+            XDocument xmladdress = new XDocument();
+            string administrative_area = "", country = "", locality = "", postal_code = "", sublocality = "";
 
             if (row.Table.Columns.Contains("entrega_record_id") && row["entrega_record_id"] is not null)
             {
@@ -359,17 +392,89 @@ namespace ApiTrapAppE.Controllers
             {
                 PEntrega.address = (string)row["entrega_address"];
 
-                PEntrega.location = (LocationModel)ObtenerDatosRuta(PEntrega.address);
+                xmladdress = ObtenerDatosRuta(PEntrega.address);
+
+                XElement result = xmladdress.Element("GeocodeResponse").Element("result");
+
+                var xmlDocument = new XmlDocument();
+                using (var xmlReader = result.CreateReader())
+                {
+                    xmlDocument.Load(xmlReader);
+                }
+
+                //DATOS ADDRESS
+                XmlNodeList address_component = xmlDocument.SelectNodes("//address_component");
+
+                foreach (XmlNode comp in address_component)
+                {
+                    string jsonText = JsonConvert.SerializeXmlNode(comp);
+
+                    jsonText = jsonText.Replace("{\"address_component\":", "");
+                    jsonText = jsonText.Replace("}}", "}");
+
+                    if (jsonText.Contains("administrative_area"))
+                    {
+                        JObject root = JObject.Parse(jsonText);
+                        JProperty property = (JProperty)root.First.Next;
+                        administrative_area = (string)property.Value;
+                    }
+
+                    if (jsonText.Contains("country"))
+                    {
+                        JObject root = JObject.Parse(jsonText);
+                        JProperty property = (JProperty)root.First.Next;
+                        country = (string)property.Value;
+                    }
+
+                    if (jsonText.Contains("locality"))
+                    {
+                        JObject root = JObject.Parse(jsonText);
+                        JProperty property = (JProperty)root.First.Next;
+                        locality = (string)property.Value;
+                    }
+
+                    if (jsonText.Contains("postal_code"))
+                    {
+                        JObject root = JObject.Parse(jsonText);
+                        JProperty property = (JProperty)root.First.Next;
+                        postal_code = (string)property.Value;
+                    }
+
+                    if (jsonText.Contains("sublocality"))
+                    {
+                        JObject root = JObject.Parse(jsonText);
+                        JProperty property = (JProperty)root.First.Next;
+                        sublocality = (string)property.Value;
+                    }
+                }
+
+                //DATOS LOCATION
+                XElement locationElement = result.Element("geometry").Element("location");
+                XElement lat = locationElement.Element("lat");
+                XElement lng = locationElement.Element("lng");
+
+                location.latitude = (decimal)lat;
+                location.longitude = (decimal)lng;
+
+                PEntrega.location = location;
             }
 
             if (row.Table.Columns.Contains("entrega_administrative_area") && row["entrega_administrative_area"] is not null)
             {
                 PEntrega.administrative_area = (string)row["entrega_administrative_area"];
             }
+            else
+            {
+                PEntrega.administrative_area = administrative_area;
+            }
 
             if (row.Table.Columns.Contains("entrega_country") && row["entrega_country"] is not null)
             {
                 PEntrega.country = (string)row["entrega_country"];
+            }
+            else
+            {
+                PEntrega.country = country;
             }
 
             if (row.Table.Columns.Contains("entrega_fecha") && row["entrega_fecha"] is not null)
@@ -386,15 +491,27 @@ namespace ApiTrapAppE.Controllers
             {
                 PEntrega.locality = (string)row["entrega_locality"];
             }
+            else
+            {
+                PEntrega.locality = locality;
+            }
 
             if (row.Table.Columns.Contains("entrega_postal_code") && row["entrega_postal_code"] is not null)
             {
                 PEntrega.postal_code = (string)row["entrega_postal_code"];
             }
+            else
+            {
+                PEntrega.postal_code = postal_code;
+            }
 
             if (row.Table.Columns.Contains("entrega_sublocality") && row["entrega_sublocality"] is not null)
             {
                 PEntrega.sublocality = (string)row["entrega_sublocality"];
+            }
+            else
+            {
+                PEntrega.sublocality = sublocality;
             }
 
             return PEntrega;
@@ -404,6 +521,8 @@ namespace ApiTrapAppE.Controllers
         {
             PuntoDetalleModel PRecoleccion = new PuntoDetalleModel();
             LocationModel location = new LocationModel();
+            XDocument xmladdress = new XDocument();
+            string administrative_area = "", country = "", locality = "", postal_code = "", sublocality = "";
 
             if (row.Table.Columns.Contains("recoleccion_record_id") && row["recoleccion_record_id"] is not null)
             {
@@ -414,7 +533,71 @@ namespace ApiTrapAppE.Controllers
             {
                 PRecoleccion.address = (string)row["recoleccion_address"];
 
-                PRecoleccion.location = (LocationModel)ObtenerDatosRuta(PRecoleccion.address);
+                xmladdress = ObtenerDatosRuta(PRecoleccion.address);
+
+                XElement result = xmladdress.Element("GeocodeResponse").Element("result");
+
+                var xmlDocument = new XmlDocument();
+                using (var xmlReader = result.CreateReader())
+                {
+                    xmlDocument.Load(xmlReader);
+                }
+
+                //DATOS ADDRESS
+                XmlNodeList address_component = xmlDocument.SelectNodes("//address_component");
+
+                foreach (XmlNode comp in address_component)
+                {
+                    string jsonText = JsonConvert.SerializeXmlNode(comp);
+
+                    jsonText = jsonText.Replace("{\"address_component\":", "");
+                    jsonText = jsonText.Replace("}}", "}");
+
+                    if (jsonText.Contains("administrative_area"))
+                    {
+                        JObject root = JObject.Parse(jsonText);
+                        JProperty property = (JProperty)root.First.Next;
+                        administrative_area = (string)property.Value;
+                    }
+
+                    if (jsonText.Contains("country"))
+                    {
+                        JObject root = JObject.Parse(jsonText);
+                        JProperty property = (JProperty)root.First.Next;
+                        country = (string)property.Value;
+                    }
+
+                    if (jsonText.Contains("locality"))
+                    {
+                        JObject root = JObject.Parse(jsonText);
+                        JProperty property = (JProperty)root.First.Next;
+                        locality = (string)property.Value;
+                    }
+
+                    if (jsonText.Contains("postal_code"))
+                    {
+                        JObject root = JObject.Parse(jsonText);
+                        JProperty property = (JProperty)root.First.Next;
+                        postal_code = (string)property.Value;
+                    }
+
+                    if (jsonText.Contains("sublocality"))
+                    {
+                        JObject root = JObject.Parse(jsonText);
+                        JProperty property = (JProperty)root.First.Next;
+                        sublocality = (string)property.Value;
+                    }
+                }
+
+                //DATOS LOCATION
+                XElement locationElement = result.Element("geometry").Element("location");
+                XElement lat = locationElement.Element("lat");
+                XElement lng = locationElement.Element("lng");
+
+                location.latitude = (decimal)lat;
+                location.longitude = (decimal)lng;
+
+                PRecoleccion.location = location;
             }
 
             if (row.Table.Columns.Contains("recoleccion_administrative_area") && row["recoleccion_administrative_area"] is not null)
@@ -441,15 +624,27 @@ namespace ApiTrapAppE.Controllers
             {
                 PRecoleccion.locality = (string)row["recoleccion_locality"];
             }
+            else
+            {
+                PRecoleccion.locality = locality;
+            }
 
             if (row.Table.Columns.Contains("recoleccion_postal_code") && row["recoleccion_postal_code"] is not null)
             {
                 PRecoleccion.postal_code = (string)row["recoleccion_postal_code"];
             }
+            else
+            {
+                PRecoleccion.postal_code = postal_code;
+            }
 
             if (row.Table.Columns.Contains("recoleccion_sublocality") && row["recoleccion_sublocality"] is not null)
             {
                 PRecoleccion.sublocality = (string)row["recoleccion_sublocality"];
+            }
+            else
+            {
+                PRecoleccion.sublocality = sublocality;
             }
 
             return PRecoleccion;
@@ -463,20 +658,36 @@ namespace ApiTrapAppE.Controllers
             {
                 CConfig.record_id = (string)row["record_id"];
             }
+            else
+            {
+                CConfig.record_id = "config";
+            }
 
             if (row.Table.Columns.Contains("estatusCarga") && row["estatusCarga"] is not null)
             {
                 CConfig.estatusCarga = (string)row["estatusCarga"];
+            }
+            else
+            {
+                CConfig.estatusCarga = "Publicada";
             }
 
             if (row.Table.Columns.Contains("fechaActualizacion") && row["fechaActualizacion"] is not null)
             {
                 CConfig.fechaActualizacion = (string)row["fechaActualizacion"];
             }
+            else
+            {
+                CConfig.fechaActualizacion = "";
+            }
 
             if (row.Table.Columns.Contains("fechaCreado") && row["fechaCreado"] is not null)
             {
                 CConfig.fechaCreado = (string)row["fechaCreado"];
+            }
+            else
+            {
+                CConfig.fechaCreado =  GetTimestamp(DateTime.Now); ;
             }
 
             if (row.Table.Columns.Contains("notificacionOferta") && row["notificacionOferta"] is not null)
@@ -601,11 +812,14 @@ namespace ApiTrapAppE.Controllers
             return DRemolque;
         }
 
-        //FUNCION PARA OBTENER DATOS DE LOS PUNTOS DE ENTREGA Y RECOLECCION
-        public Object ObtenerDatosRuta(string address)
+        public static String GetTimestamp(DateTime value)
         {
-            LocationModel location = new LocationModel(); 
+            return value.ToString("yyyyMMddHHmmssffff");
+        }
 
+        //FUNCION PARA OBTENER DATOS DE LOS PUNTOS DE ENTREGA Y RECOLECCION
+        public XDocument ObtenerDatosRuta(string address)
+        {
             var apikey = "AIzaSyBs-iRGy4GQdnqmLrDqMSV8sIcraM9kXl4";
 
             string requestUri = string.Format("https://maps.googleapis.com/maps/api/geocode/xml?key={1}&address={0}&sensor=false", Uri.EscapeDataString(address), apikey);
@@ -617,15 +831,118 @@ namespace ApiTrapAppE.Controllers
 
             XDocument xdoc = XDocument.Load(response.GetResponseStream());
 
-            XElement result = xdoc.Element("GeocodeResponse").Element("result");
-            XElement locationElement = result.Element("geometry").Element("location");
-            XElement lat = locationElement.Element("lat");
-            XElement lng = locationElement.Element("lng");
+            return xdoc;
+        }
 
-            location.latitud = (decimal)lat;
-            location.longitud = (decimal)lng;
+        public string Calcula_Time_KM(decimal latitude_origen, decimal longitude_origen, decimal latitude_destino, decimal longitude_destino)
+        {
+            var apikey = "AIzaSyBs-iRGy4GQdnqmLrDqMSV8sIcraM9kXl4";
 
-            return location;
+            string requestUri = string.Format("https://maps.googleapis.com/maps/api/directions/json?origin=" + Convert.ToString(latitude_origen) + "," + Convert.ToString(longitude_origen) + "&destination=" + Convert.ToString(latitude_destino) + "," + Convert.ToString(longitude_destino) + "&mode=driving&lenguaje=es&key=" + apikey);
+
+            WebRequest request = WebRequest.Create(requestUri);
+            WebResponse response = request.GetResponse();
+
+            var respmaps = response.GetResponseStream();
+
+            Stream dataStream = response.GetResponseStream();
+            StreamReader reader = new StreamReader(dataStream, Encoding.UTF8);
+            string responseFromServer = reader.ReadToEnd();
+            reader.Close();
+            response.Close();
+
+            string result = ProcesaResultApiGoogle(responseFromServer);
+
+            return result;
+        }
+
+        public string ProcesaResultApiGoogle(string responseFromServer)
+        {
+            decimal distanciaFinal = 0;
+            string strDataDistanciaJSON1 = "", strDataDistanciaJSON2 = "", resudistancia = "", strDataTiempoJSON = "", resutiempo = "";
+
+            JObject jsonRespose = JObject.Parse(responseFromServer);
+            List<JToken> jtDataResponse = new List<JToken>(jsonRespose.Children());
+            object obj2 = jtDataResponse[1].First;
+
+            string qwert = obj2.ToString();
+            string nuevo = qwert.Replace("\n", "").Replace("\r", "").Replace("\t", "").Replace(" ", "");
+            JArray nuevoarray = (JArray)JsonConvert.DeserializeObject(nuevo);
+            JObject nuevoobj = (JObject)nuevoarray[0];
+            
+            int a = 0;
+            IList<JToken> list = nuevoobj;
+            for (int i = 0; i < list.Count; i++)
+            {
+                JToken item = list[i];
+                if (a == 2) {
+                    strDataDistanciaJSON1 = item.First.ToString();
+                    strDataDistanciaJSON1 = strDataDistanciaJSON1.Replace("\n", "").Replace("\r", "").Replace("\t", "").Replace(" ", "");
+                    break;
+                }
+
+                a = a + 1;
+            }
+
+            JArray nuevoarray2 = (JArray)JsonConvert.DeserializeObject(strDataDistanciaJSON1);
+            JObject nuevoobj2 = (JObject)nuevoarray2[0];
+
+            int b = 0;
+            IList<JToken> list2 = nuevoobj2;
+            for (int i = 0; i < list2.Count; i++)
+            {
+                JToken item = list2[i];
+                if (b == 0)
+                {
+                    strDataDistanciaJSON2 = item.First.ToString();
+                    strDataDistanciaJSON2 = strDataDistanciaJSON2.Replace("\n", "").Replace("\r", "").Replace("\t", "").Replace(" ", "");
+                }
+
+                if (b == 1)
+                {
+                    strDataTiempoJSON = item.First.ToString();
+                    strDataTiempoJSON = strDataTiempoJSON.Replace("\n", "").Replace("\r", "").Replace("\t", "").Replace(" ", "");
+                    break;
+                }
+
+                b = b + 1;
+            }
+
+            JObject resultadofinalObjectDistancia = (JObject)JsonConvert.DeserializeObject(strDataDistanciaJSON2);
+            int c = 0;
+
+            IList<JToken> list3 = resultadofinalObjectDistancia;
+            for (int i = 0; i < list3.Count; i++)
+            {
+                JToken item = list3[i];
+                if (c == 1)
+                {
+                    resudistancia = item.First.ToString();
+                    break;
+                }
+
+                c = c + 1;
+            }
+
+            JObject resultadofinalObjectTiempo = (JObject)JsonConvert.DeserializeObject(strDataTiempoJSON);
+            int d = 0;
+
+            IList<JToken> list4 = resultadofinalObjectTiempo;
+            for (int i = 0; i < list4.Count; i++)
+            {
+                JToken item = list4[i];
+                if (d == 1)
+                {
+                    resutiempo = item.First.ToString();
+                    break;
+                }
+
+                d = d + 1;
+            }
+
+            string result = resudistancia + "," + resutiempo;
+
+            return result;
         }
     }
 }

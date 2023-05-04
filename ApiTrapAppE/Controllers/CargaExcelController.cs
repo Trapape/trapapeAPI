@@ -54,7 +54,8 @@ namespace ApiTrapAppE.Controllers
                     Guid IdDoucumento = Guid.NewGuid();
 
                     string nombre = IdDoucumento + ext;
-                    
+                    string idCargaPrincipal = Convert.ToString(IdDoucumento);
+
                     var auth = new FirebaseAuthProvider(new FirebaseConfig(api_key));
                     var access = await auth.SignInWithEmailAndPasswordAsync(user, pass);
 
@@ -79,7 +80,7 @@ namespace ApiTrapAppE.Controllers
                     response.URLExcel = downloadURL;
                     response.message = "Excel cargado correctamente.";
 
-                    ListData = procesaExcel.ProcesaExcel(Objfile.file, nombre, response, userConsig, downloadURL);
+                    ListData = procesaExcel.ProcesaExcel(Objfile.file, nombre, response, userConsig, downloadURL, idCargaPrincipal);
 
                     response.Data = ListData.ToArray();
 
@@ -126,6 +127,9 @@ namespace ApiTrapAppE.Controllers
                 string ruta = "trapape.appspot.com";
                 string api_key = "AIzaSyBs-iRGy4GQdnqmLrDqMSV8sIcraM9kXl4";
 
+                Guid IdDoucumento = Guid.NewGuid();
+
+                string idCargaPrincipal = Convert.ToString(IdDoucumento);
 
                 var auth = new FirebaseAuthProvider(new FirebaseConfig(api_key));
                 var access = await auth.SignInWithEmailAndPasswordAsync(user, pass);
@@ -162,10 +166,10 @@ namespace ApiTrapAppE.Controllers
                 var procesaExcel = new ProcesaExcelController();
 
                 response.isSucces = true;
-                response.URLExcel = "";
+                response.URLExcel = task;
                 response.message = "Documento Procesado.";
 
-                ListData = procesaExcel.ProcesaExcel(Objfile, nombre, response, userConsig);
+                ListData = procesaExcel.ProcesaExcel(Objfile, nombre, response, userConsig, task, idCargaPrincipal);
 
                 response.Data = ListData.ToArray();
 

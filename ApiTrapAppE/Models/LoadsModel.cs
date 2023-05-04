@@ -11,6 +11,7 @@
         public Boolean foto2 { get; set; }
         public Boolean foto3 { get; set; }
         public Boolean fotos { get; set; }
+        public string idCargaPrincipal { get; set; }
         public string numRemolques { get; set; }
         public Decimal precioViaje { get; set; }
         public Boolean recibirOfertas { get; set; }
@@ -26,7 +27,7 @@
         public String userOperador { get; set; }
         public String userTranspor { get; set; }
         public PuntoModel Punto { get; set; }
-        public RemolqueModel Remolque { get; set; }
+        public RemolqueModel remolque { get; set; }
         public ConfigModel config { get; set; }
         public string nombreExcel { get; set; }
     }

@@ -21,6 +21,8 @@ using NPOI.SS.Formula.Functions;
 using System.Text.Json.Serialization;
 using NPOI.OpenXmlFormats.Spreadsheet;
 using static System.Net.Mime.MediaTypeNames;
+using System.Collections;
+using NPOI.Util;
 
 namespace ApiTrapAppE.Controllers
 {
@@ -44,7 +46,7 @@ namespace ApiTrapAppE.Controllers
             cliente = new FirebaseClient(config);
         }
 
-        public List<DataLoadsModel> ProcesaExcel([FromForm] IFormFile ArchivoExcel, string NombreArchivo, ResponseModel response, string userConsig, string downloadURL = "")
+        public List<DataLoadsModel> ProcesaExcel([FromForm] IFormFile ArchivoExcel, string NombreArchivo, ResponseModel response, string userConsig, string downloadURL, string idCargaPrincipal)
         {
             Stream stream = ArchivoExcel.OpenReadStream();
             List<DataLoadsModel> ListData = new List<DataLoadsModel>();
@@ -91,7 +93,7 @@ namespace ApiTrapAppE.Controllers
                     InsertaTabla(dtExcelData, fila, intdtcolumn);
                 }
 
-                ListData = GeneraLoad(dtExcelData, NombreArchivo, userConsig, downloadURL);
+                ListData = GeneraLoad(dtExcelData, NombreArchivo, userConsig, downloadURL, idCargaPrincipal);
 
                 foreach (var item in ListData)
                 {
@@ -139,7 +141,7 @@ namespace ApiTrapAppE.Controllers
             return dtExcelData;
         }
 
-        public List<DataLoadsModel> GeneraLoad(DataTable dtExcelData, string NombreArchivo, string userConsig, string downloadURL = "")
+        public List<DataLoadsModel> GeneraLoad(DataTable dtExcelData, string NombreArchivo, string userConsig, string downloadURL, string idCargaPrincipal)
         {
             var message = "";
             List<DataLoadsModel> ListData = new List<DataLoadsModel>();
@@ -273,9 +275,10 @@ namespace ApiTrapAppE.Controllers
 
                     load.userConsig = userConsig;
                     load.Punto = GetPunto(row);
-                    load.Remolque = GetRemolque(row);
+                    load.remolque = GetRemolque(row);
                     load.config = GetConfig(row);
                     load.nombreExcel = downloadURL;
+                    load.idCargaPrincipal = idCargaPrincipal;
 
                     if (row.Table.Columns.Contains("distanciaKM") && row.Field<string>("distanciaKM") is not null && row.Field<string>("distanciaKM") != "")
                     {
@@ -331,6 +334,43 @@ namespace ApiTrapAppE.Controllers
 
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
+                SubirGeoFire(Load, IdGenerado);
+                return "Id Cargado";
+            }
+            else
+            {
+                return "No se cargaron los datos.";
+            }
+        }
+
+        public string SubirGeoFire(Object Load, string IdGenerado)
+        {
+            geoFireLoadsModel geoFireLoad = new geoFireLoadsModel();
+
+            int longitud = 10;
+            Guid guid_token = Guid.NewGuid();
+            string token = Convert.ToBase64String(guid_token.ToByteArray());
+            token = token.Replace("=", "").Replace("+", "").Replace("/", "");
+            
+            geoFireLoad.priority = token.Substring(0, longitud);
+            geoFireLoad.data = (LoadsModel)Load;
+
+            geoFireLoad.g = token.Substring(0, longitud);
+
+            decimal latitude = geoFireLoad.data.Punto.recoleccion.location.latitude;
+            decimal longitude = geoFireLoad.data.Punto.recoleccion.location.longitude;
+
+            decimal[] array = new decimal[2];
+            array[0] = latitude;
+            array[1] = longitude;
+
+            geoFireLoad.l = array;
+
+            SetResponse response = cliente.Set("projects/proj_meqjHnqVDFjzhizHdj6Fjq/geoFireGroups/Loads/" + IdGenerado, geoFireLoad);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+
                 return "Id Cargado";
             }
             else
@@ -604,10 +644,18 @@ namespace ApiTrapAppE.Controllers
             {
                 PRecoleccion.administrative_area = (string)row["recoleccion_administrative_area"];
             }
+            else
+            {
+                PRecoleccion.administrative_area = administrative_area;
+            }
 
             if (row.Table.Columns.Contains("recoleccion_country") && row["recoleccion_country"] is not null)
             {
                 PRecoleccion.country = (string)row["recoleccion_country"];
+            }
+            else
+            {
+                PRecoleccion.country = country;
             }
 
             if (row.Table.Columns.Contains("recoleccion_fecha") && row["recoleccion_fecha"] is not null)

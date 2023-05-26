@@ -7,5 +7,6 @@
         public String fechaActualizacion { get; set; }
         public String fechaCreado { get; set; }
         public Boolean notificacionOferta { get; set; }
+        public Boolean privacidad { get; set; }
     }
 }

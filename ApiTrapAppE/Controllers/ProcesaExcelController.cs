@@ -78,6 +78,11 @@ namespace ApiTrapAppE.Controllers
                     continue;
                 }
 
+                if (!HojaExcel.SheetName.Contains("_"))
+                {
+                    continue;
+                }
+
                 int intdtcolumn = HojaExcel.GetRow(0).LastCellNum;
                 DataTable dtExcelData = GeneraTabla(HojaExcel.GetRow(0), HojaExcel.GetRow(0).LastCellNum);
 
@@ -90,7 +95,11 @@ namespace ApiTrapAppE.Controllers
                         continue;
                     }
 
-                    InsertaTabla(dtExcelData, fila, intdtcolumn);
+                    int cabecera = (intdtcolumn - 5);
+                    if (fila != null && fila.LastCellNum > cabecera)
+                    {
+                        InsertaTabla(dtExcelData, fila, intdtcolumn);
+                    }
                 }
 
                 ListData = GeneraLoad(dtExcelData, NombreArchivo, userConsig, downloadURL, idCargaPrincipal);
@@ -110,8 +119,10 @@ namespace ApiTrapAppE.Controllers
 
             for (int icolumn = 0; icolumn < intdtcolumn; icolumn++)
             {
-                dtExcelData.Columns.Add(dr.GetCell(icolumn).ToString());
-
+                if(dr.GetCell(icolumn) is not null)
+                {
+                    dtExcelData.Columns.Add(dr.GetCell(icolumn).ToString());
+                }
             }
 
             return dtExcelData;
@@ -131,7 +142,24 @@ namespace ApiTrapAppE.Controllers
                     }
                     else
                     {
-                        renglon[icolumn] = dr.GetCell(icolumn).ToString();
+                        string valor_primer_celda = "";
+                        valor_primer_celda = dr.GetCell(0).StringCellValue;
+
+                        if (valor_primer_celda == "")
+                        {
+                            break;
+                        }
+
+                        string tipo_dato_celda = dr.GetCell(icolumn).CachedFormulaResultType.ToString();
+
+                        if (tipo_dato_celda == "String")
+                        {
+                            renglon[icolumn] = dr.GetCell(icolumn).StringCellValue;
+                        }
+                        else if(tipo_dato_celda == "Numeric")
+                        {
+                            renglon[icolumn] = dr.GetCell(icolumn).NumericCellValue.ToString();
+                        }
                     }
                 }
             }
@@ -306,7 +334,15 @@ namespace ApiTrapAppE.Controllers
 
                     Object Loadfila = Loads[0];
 
-                    message = SubirInfo(Loadfila, Convert.ToString(IdGenerado));
+                    if (row.Table.Columns.Contains("cargaValida") && row.Field<string>("cargaValida") is not null && row.Field<string>("cargaValida") == "true")
+                    {
+                        message = SubirInfo(Loadfila, Convert.ToString(IdGenerado));
+                    }
+                    else
+                    {
+                        message = "No se cargaron los datos.";
+                    }
+
 
                     if (message == "Id Cargado")
                     {
@@ -366,7 +402,13 @@ namespace ApiTrapAppE.Controllers
 
             geoFireLoad.l = array;
 
-            SetResponse response = cliente.Set("projects/proj_meqjHnqVDFjzhizHdj6Fjq/geoFireGroups/Loads/" + IdGenerado, geoFireLoad);
+            string str_geoFireLoad = JsonConvert.SerializeObject(geoFireLoad);
+
+            str_geoFireLoad = str_geoFireLoad.Replace("priority", ".priority");
+
+            object obj_geoFireLoad = JsonConvert.DeserializeObject(str_geoFireLoad);
+
+            SetResponse response = cliente.Set("projects/proj_meqjHnqVDFjzhizHdj6Fjq/geoFireGroups/Loads/" + IdGenerado, obj_geoFireLoad);
 
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
@@ -501,11 +543,11 @@ namespace ApiTrapAppE.Controllers
 
             if (row.Table.Columns.Contains("entrega_administrative_area") && row["entrega_administrative_area"] is not null)
             {
-                PEntrega.administrative_area = (string)row["entrega_administrative_area"];
+                PEntrega.area_administrative_1 = (string)row["entrega_administrative_area"];
             }
             else
             {
-                PEntrega.administrative_area = administrative_area;
+                PEntrega.area_administrative_1 = administrative_area;
             }
 
             if (row.Table.Columns.Contains("entrega_country") && row["entrega_country"] is not null)
@@ -642,11 +684,11 @@ namespace ApiTrapAppE.Controllers
 
             if (row.Table.Columns.Contains("recoleccion_administrative_area") && row["recoleccion_administrative_area"] is not null)
             {
-                PRecoleccion.administrative_area = (string)row["recoleccion_administrative_area"];
+                PRecoleccion.area_administrative_1 = (string)row["recoleccion_administrative_area"];
             }
             else
             {
-                PRecoleccion.administrative_area = administrative_area;
+                PRecoleccion.area_administrative_1 = administrative_area;
             }
 
             if (row.Table.Columns.Contains("recoleccion_country") && row["recoleccion_country"] is not null)
@@ -735,12 +777,21 @@ namespace ApiTrapAppE.Controllers
             }
             else
             {
-                CConfig.fechaCreado =  GetTimestamp(DateTime.Now); ;
+                CConfig.fechaCreado =  GetTimestamp(DateTime.Now);
             }
 
             if (row.Table.Columns.Contains("notificacionOferta") && row["notificacionOferta"] is not null)
             {
                 CConfig.notificacionOferta = (Boolean)row["notificacionOferta"];
+            }
+
+            if (row.Table.Columns.Contains("privacidad") && row["privacidad"] is not null)
+            {
+                CConfig.privacidad = (Boolean)row["privacidad"];
+            }
+            else
+            {
+                CConfig.privacidad = false;
             }
 
             return CConfig;
@@ -862,7 +913,7 @@ namespace ApiTrapAppE.Controllers
 
         public static String GetTimestamp(DateTime value)
         {
-            return value.ToString("yyyyMMddHHmmssffff");
+            return value.ToString("yyyy-MM-ddTHH:mm:ss");
         }
 
         //FUNCION PARA OBTENER DATOS DE LOS PUNTOS DE ENTREGA Y RECOLECCION

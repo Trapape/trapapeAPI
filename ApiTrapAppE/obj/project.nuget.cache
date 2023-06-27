@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "nfsrmqo73Dv3Sx/2O+UyY3TyfNU4F40nBJWJtZoVlN4SAqkgiFlLYy3IrkWAE3649MpjfhKkfzOPOoElejr4Vw==",
+  "dgSpecHash": "dLUBrYfbm5naYvXtYvMgxZvmFl0dGskGEFu8MyPJWnA9bEuCnmlIvuGWamaCRUwpuENOWUpEJJ6KTQqnMPxeiA==",
   "success": true,
-  "projectFilePath": "C:\\Users\\Beto HJ\\Documents\\Trapape\\MAIN\\trapapeAPI\\ApiTrapAppE\\ApiTrapAppE\\ApiTrapAppE.csproj",
+  "projectFilePath": "C:\\Users\\Beto HJ\\Documents\\Trapape\\main\\trapapeAPI\\ApiTrapAppE\\ApiTrapAppE\\ApiTrapAppE.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Beto HJ\\.nuget\\packages\\exceldatareader\\3.6.0\\exceldatareader.3.6.0.nupkg.sha512",
     "C:\\Users\\Beto HJ\\.nuget\\packages\\firebaseauthentication.net\\3.7.2\\firebaseauthentication.net.3.7.2.nupkg.sha512",

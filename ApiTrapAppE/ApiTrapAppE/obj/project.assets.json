@@ -64,6 +64,23 @@
           "lib/netstandard2.0/Json.Net.dll": {}
         }
       },
+      "Microsoft.AspNet.WebApi.Client/5.2.9": {
+        "type": "package",
+        "dependencies": {
+          "Newtonsoft.Json": "10.0.1",
+          "Newtonsoft.Json.Bson": "1.0.1"
+        },
+        "compile": {
+          "lib/netstandard2.0/System.Net.Http.Formatting.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/System.Net.Http.Formatting.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.Bcl/1.1.9": {
         "type": "package",
         "dependencies": {
@@ -261,6 +278,23 @@
         },
         "runtime": {
           "lib/net6.0/Newtonsoft.Json.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Newtonsoft.Json.Bson/1.0.1": {
+        "type": "package",
+        "dependencies": {
+          "NETStandard.Library": "1.6.1",
+          "Newtonsoft.Json": "10.0.1"
+        },
+        "compile": {
+          "lib/netstandard1.3/Newtonsoft.Json.Bson.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard1.3/Newtonsoft.Json.Bson.dll": {
             "related": ".xml"
           }
         }
@@ -1901,6 +1935,25 @@
         "lib/netstandard2.0/Json.Net.dll"
       ]
     },
+    "Microsoft.AspNet.WebApi.Client/5.2.9": {
+      "sha512": "cuVhPjjNMSEFpKXweMNBbsG4RUFuuZpFBm8tSyw309U9JEjcnbB6n3EPb4xwgcy9bJ38ctIbv5G8zXUBhlrPWw==",
+      "type": "package",
+      "path": "microsoft.aspnet.webapi.client/5.2.9",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "NET.icon.png",
+        "NET_Library_EULA_ENU.txt",
+        "lib/net45/System.Net.Http.Formatting.dll",
+        "lib/net45/System.Net.Http.Formatting.xml",
+        "lib/netstandard2.0/System.Net.Http.Formatting.dll",
+        "lib/netstandard2.0/System.Net.Http.Formatting.xml",
+        "lib/portable-wp8+netcore45+net45+wp81+wpa81/System.Net.Http.Formatting.dll",
+        "lib/portable-wp8+netcore45+net45+wp81+wpa81/System.Net.Http.Formatting.xml",
+        "microsoft.aspnet.webapi.client.5.2.9.nupkg.sha512",
+        "microsoft.aspnet.webapi.client.nuspec"
+      ]
+    },
     "Microsoft.Bcl/1.1.9": {
       "sha512": "USQ55innJy8K+tAXvVa1O8dUTp2s7pmJ5cJj6Tl02HtGc2xBDj0P2QH5620HbGXIWKWYhydoeQF8Rm/JRDBGhw==",
       "type": "package",
@@ -2323,6 +2376,21 @@
         "newtonsoft.json.13.0.3.nupkg.sha512",
         "newtonsoft.json.nuspec",
         "packageIcon.png"
+      ]
+    },
+    "Newtonsoft.Json.Bson/1.0.1": {
+      "sha512": "5PYT/IqQ+UK31AmZiSS102R6EsTo+LGTSI8bp7WAUqDKaF4wHXD8U9u4WxTI1vc64tYi++8p3dk3WWNqPFgldw==",
+      "type": "package",
+      "path": "newtonsoft.json.bson/1.0.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net45/Newtonsoft.Json.Bson.dll",
+        "lib/net45/Newtonsoft.Json.Bson.xml",
+        "lib/netstandard1.3/Newtonsoft.Json.Bson.dll",
+        "lib/netstandard1.3/Newtonsoft.Json.Bson.xml",
+        "newtonsoft.json.bson.1.0.1.nupkg.sha512",
+        "newtonsoft.json.bson.nuspec"
       ]
     },
     "NPOI/2.5.6": {
@@ -6145,6 +6213,7 @@
       "FirebaseAuthentication.net >= 3.7.2",
       "FirebaseStorage.net >= 1.0.3",
       "Json.Net >= 1.0.33",
+      "Microsoft.AspNet.WebApi.Client >= 5.2.9",
       "NPOI >= 2.5.6",
       "Newtonsoft.Json >= 13.0.3",
       "Swashbuckle.AspNetCore >= 6.2.3",
@@ -6152,19 +6221,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\yjsilva\\.nuget\\packages\\": {}
+    "C:\\Users\\Beto HJ\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Proyectos\\ApiTrapAppE\\ApiTrapAppE\\ApiTrapAppE.csproj",
+      "projectUniqueName": "C:\\Users\\Beto HJ\\Documents\\Trapape\\main\\trapapeAPI\\ApiTrapAppE\\ApiTrapAppE\\ApiTrapAppE.csproj",
       "projectName": "ApiTrapAppE",
-      "projectPath": "D:\\Proyectos\\ApiTrapAppE\\ApiTrapAppE\\ApiTrapAppE.csproj",
-      "packagesPath": "C:\\Users\\yjsilva\\.nuget\\packages\\",
-      "outputPath": "D:\\Proyectos\\ApiTrapAppE\\ApiTrapAppE\\obj\\",
+      "projectPath": "C:\\Users\\Beto HJ\\Documents\\Trapape\\main\\trapapeAPI\\ApiTrapAppE\\ApiTrapAppE\\ApiTrapAppE.csproj",
+      "packagesPath": "C:\\Users\\Beto HJ\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Beto HJ\\Documents\\Trapape\\MAIN\\trapapeAPI\\ApiTrapAppE\\ApiTrapAppE\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\yjsilva\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\Beto HJ\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -6172,6 +6241,7 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "C:\\Program Files\\dotnet\\sdk\\7.0.304\\Sdks\\Microsoft.NET.Sdk.Web\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -6210,6 +6280,10 @@
             "target": "Package",
             "version": "[1.0.33, )"
           },
+          "Microsoft.AspNet.WebApi.Client": {
+            "target": "Package",
+            "version": "[5.2.9, )"
+          },
           "NPOI": {
             "target": "Package",
             "version": "[2.5.6, )"
@@ -6246,7 +6320,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.202\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.304\\RuntimeIdentifierGraph.json"
       }
     }
   },

@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Proyectos\\ApiTrapAppE\\ApiTrapAppE\\ApiTrapAppE.csproj": {}
+    "C:\\Users\\Beto HJ\\Documents\\Trapape\\main\\trapapeAPI\\ApiTrapAppE\\ApiTrapAppE\\ApiTrapAppE.csproj": {}
   },
   "projects": {
-    "D:\\Proyectos\\ApiTrapAppE\\ApiTrapAppE\\ApiTrapAppE.csproj": {
+    "C:\\Users\\Beto HJ\\Documents\\Trapape\\main\\trapapeAPI\\ApiTrapAppE\\ApiTrapAppE\\ApiTrapAppE.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Proyectos\\ApiTrapAppE\\ApiTrapAppE\\ApiTrapAppE.csproj",
+        "projectUniqueName": "C:\\Users\\Beto HJ\\Documents\\Trapape\\main\\trapapeAPI\\ApiTrapAppE\\ApiTrapAppE\\ApiTrapAppE.csproj",
         "projectName": "ApiTrapAppE",
-        "projectPath": "D:\\Proyectos\\ApiTrapAppE\\ApiTrapAppE\\ApiTrapAppE.csproj",
-        "packagesPath": "C:\\Users\\yjsilva\\.nuget\\packages\\",
-        "outputPath": "D:\\Proyectos\\ApiTrapAppE\\ApiTrapAppE\\obj\\",
+        "projectPath": "C:\\Users\\Beto HJ\\Documents\\Trapape\\main\\trapapeAPI\\ApiTrapAppE\\ApiTrapAppE\\ApiTrapAppE.csproj",
+        "packagesPath": "C:\\Users\\Beto HJ\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Beto HJ\\Documents\\Trapape\\main\\trapapeAPI\\ApiTrapAppE\\ApiTrapAppE\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\yjsilva\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Beto HJ\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -22,6 +22,7 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\sdk\\7.0.304\\Sdks\\Microsoft.NET.Sdk.Web\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -60,6 +61,10 @@
               "target": "Package",
               "version": "[1.0.33, )"
             },
+            "Microsoft.AspNet.WebApi.Client": {
+              "target": "Package",
+              "version": "[5.2.9, )"
+            },
             "NPOI": {
               "target": "Package",
               "version": "[2.5.6, )"
@@ -96,7 +101,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.202\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.304\\RuntimeIdentifierGraph.json"
         }
       }
     }

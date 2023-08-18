@@ -4,7 +4,7 @@
     {
         public String record_id { get; set; }
         public String address { get; set; }
-        public String area_administrative_1 { get; set; }
+        public String administrative_area { get; set; }
         public String country { get; set; }
         public String fecha { get; set; }
         public String hora { get; set; }

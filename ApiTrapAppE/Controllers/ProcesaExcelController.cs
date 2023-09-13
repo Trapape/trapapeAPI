@@ -543,11 +543,11 @@ namespace ApiTrapAppE.Controllers
 
             if (row.Table.Columns.Contains("entrega_administrative_area") && row["entrega_administrative_area"] is not null)
             {
-                PEntrega.area_administrative_1 = (string)row["entrega_administrative_area"];
+                PEntrega.administrative_area = (string)row["entrega_administrative_area"];
             }
             else
             {
-                PEntrega.area_administrative_1 = administrative_area;
+                PEntrega.administrative_area = administrative_area;
             }
 
             if (row.Table.Columns.Contains("entrega_country") && row["entrega_country"] is not null)
@@ -561,12 +561,21 @@ namespace ApiTrapAppE.Controllers
 
             if (row.Table.Columns.Contains("entrega_fecha") && row["entrega_fecha"] is not null)
             {
-                PEntrega.fecha = (string)row["entrega_fecha"];
+                double fechaExcelValue = Convert.ToDouble(row["entrega_fecha"]);
+                DateTime fechaEntrega = DateTime.FromOADate(fechaExcelValue);
+                string fechaEntregaString = fechaEntrega.ToString("dd-MM-yyyy");
+                PEntrega.fecha = fechaEntregaString;
+                //PEntrega.fecha = (string)row["entrega_fecha"];
             }
 
             if (row.Table.Columns.Contains("entrega_hora") && row["entrega_hora"] is not null)
             {
-                PEntrega.hora = (string)row["entrega_hora"];
+                double horaExcelValue = Convert.ToDouble(row["entrega_hora"]);
+                double horas = horaExcelValue * 24;
+                TimeSpan horaEntrega = TimeSpan.FromHours(horas);
+                string horaEntregaString = horaEntrega.ToString();
+                PEntrega.hora = horaEntregaString;
+                //PEntrega.hora = (string)row["entrega_hora"];
             }
 
             if (row.Table.Columns.Contains("entrega_locality") && row["entrega_locality"] is not null)
@@ -684,11 +693,11 @@ namespace ApiTrapAppE.Controllers
 
             if (row.Table.Columns.Contains("recoleccion_administrative_area") && row["recoleccion_administrative_area"] is not null)
             {
-                PRecoleccion.area_administrative_1 = (string)row["recoleccion_administrative_area"];
+                PRecoleccion.administrative_area = (string)row["recoleccion_administrative_area"];
             }
             else
             {
-                PRecoleccion.area_administrative_1 = administrative_area;
+                PRecoleccion.administrative_area = administrative_area;
             }
 
             if (row.Table.Columns.Contains("recoleccion_country") && row["recoleccion_country"] is not null)
@@ -702,12 +711,21 @@ namespace ApiTrapAppE.Controllers
 
             if (row.Table.Columns.Contains("recoleccion_fecha") && row["recoleccion_fecha"] is not null)
             {
-                PRecoleccion.fecha = (string)row["recoleccion_fecha"];
+                double fechaExcelValue = Convert.ToDouble(row["recoleccion_fecha"]);
+                DateTime fechaEntrega = DateTime.FromOADate(fechaExcelValue);
+                string fechaEntregaString = fechaEntrega.ToString("dd-MM-yyyy");
+                PRecoleccion.fecha = fechaEntregaString;
+                //PRecoleccion.fecha = (string)row["recoleccion_fecha"];
             }
 
             if (row.Table.Columns.Contains("recoleccion_hora") && row["recoleccion_hora"] is not null)
             {
-                PRecoleccion.hora = (string)row["recoleccion_hora"];
+                double horaExcelValue = Convert.ToDouble(row["recoleccion_hora"]);
+                double horas = horaExcelValue * 24;
+                TimeSpan horaEntrega = TimeSpan.FromHours(horas);
+                string horaEntregaString = horaEntrega.ToString();
+                PRecoleccion.hora = horaEntregaString;
+                //PRecoleccion.hora = (string)row["recoleccion_hora"];
             }
 
             if (row.Table.Columns.Contains("recoleccion_locality") && row["recoleccion_locality"] is not null)

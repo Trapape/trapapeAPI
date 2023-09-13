@@ -15,7 +15,7 @@ var app = builder.Build();
 
 app.UseCors(builder =>
 {
-    builder.WithOrigins("http://localhost:3000")
+    builder.WithOrigins("http://localhost:3000", "https://main.d3r94jqm5mt9kz.amplifyapp.com")
            .AllowAnyHeader()
            .AllowAnyMethod();
 });

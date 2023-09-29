@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Beto HJ\\Documents\\Trapape\\main\\trapapeAPI\\ApiTrapAppE\\ApiTrapAppE\\ApiTrapAppE.csproj": {}
+    "C:\\Users\\Beto\\Documents\\trapapeSW\\trapapeAPI\\ApiTrapAppE\\ApiTrapAppE.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Beto HJ\\Documents\\Trapape\\main\\trapapeAPI\\ApiTrapAppE\\ApiTrapAppE\\ApiTrapAppE.csproj": {
+    "C:\\Users\\Beto\\Documents\\trapapeSW\\trapapeAPI\\ApiTrapAppE\\ApiTrapAppE.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Beto HJ\\Documents\\Trapape\\main\\trapapeAPI\\ApiTrapAppE\\ApiTrapAppE\\ApiTrapAppE.csproj",
+        "projectUniqueName": "C:\\Users\\Beto\\Documents\\trapapeSW\\trapapeAPI\\ApiTrapAppE\\ApiTrapAppE.csproj",
         "projectName": "ApiTrapAppE",
-        "projectPath": "C:\\Users\\Beto HJ\\Documents\\Trapape\\main\\trapapeAPI\\ApiTrapAppE\\ApiTrapAppE\\ApiTrapAppE.csproj",
-        "packagesPath": "C:\\Users\\Beto HJ\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Beto HJ\\Documents\\Trapape\\main\\trapapeAPI\\ApiTrapAppE\\ApiTrapAppE\\obj\\",
+        "projectPath": "C:\\Users\\Beto\\Documents\\trapapeSW\\trapapeAPI\\ApiTrapAppE\\ApiTrapAppE.csproj",
+        "packagesPath": "C:\\Users\\Beto\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Beto\\Documents\\trapapeSW\\trapapeAPI\\ApiTrapAppE\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Beto HJ\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Beto\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -22,7 +22,6 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\sdk\\7.0.304\\Sdks\\Microsoft.NET.Sdk.Web\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -41,10 +40,6 @@
         "net6.0": {
           "targetAlias": "net6.0",
           "dependencies": {
-            "ExcelDataReader": {
-              "target": "Package",
-              "version": "[3.6.0, )"
-            },
             "FireSharp": {
               "target": "Package",
               "version": "[2.0.4, )"
@@ -57,29 +52,13 @@
               "target": "Package",
               "version": "[1.0.3, )"
             },
-            "Json.Net": {
-              "target": "Package",
-              "version": "[1.0.33, )"
-            },
-            "Microsoft.AspNet.WebApi.Client": {
-              "target": "Package",
-              "version": "[5.2.9, )"
-            },
             "NPOI": {
               "target": "Package",
               "version": "[2.5.6, )"
             },
-            "Newtonsoft.Json": {
-              "target": "Package",
-              "version": "[13.0.3, )"
-            },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
               "version": "[6.2.3, )"
-            },
-            "System.Runtime.Serialization.Json": {
-              "target": "Package",
-              "version": "[4.3.0, )"
             }
           },
           "imports": [
@@ -101,7 +80,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.304\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.401\\RuntimeIdentifierGraph.json"
         }
       }
     }

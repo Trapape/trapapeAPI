@@ -2,11 +2,22 @@
 {
     public class ConfigConfigModel
     {
-        public String record_id { get; set; }
-        public String estatusCarga { get; set; }
-        public String fechaActualizacion { get; set; }
-        public String fechaCreado { get; set; }
-        public Boolean notificacionOferta { get; set; }
-        public Boolean privacidad { get; set; }
+        public string record_id { get; set; }
+        public string estatusCarga { get; set; }
+        public string estatus { get; set; }
+        public string fechaActualizacion { get; set; }
+        public string fechaCreado { get; set; }
+        public bool notificacionOferta { get; set; }
+        public bool privacidad { get; set; }
+
+        // Constructor que asigna valores predeterminados
+        public ConfigConfigModel()
+        {
+            record_id = "config";
+            estatusCarga = "Publicada";
+            estatus = "Publicada";
+            notificacionOferta = false;
+            privacidad = false;
+        }
     }
 }

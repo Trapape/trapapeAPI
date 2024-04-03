@@ -32,7 +32,7 @@ namespace ApiTrapAppE.Controllers
         {
             try
             {
-                if (Objfile.file.Length > 0)
+                if(Objfile.file.Length > 0)
                 {
                     //DATOS DE CONEXION
                     string user = "cargaeexcel@gmail.com";

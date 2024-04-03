@@ -5713,19 +5713,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Beto\\.nuget\\packages\\": {}
+    "C:\\Users\\BetoHJ\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Beto\\Documents\\trapapeSW\\trapapeAPI\\ApiTrapAppE\\ApiTrapAppE.csproj",
+      "projectUniqueName": "C:\\Users\\BetoHJ\\Desktop\\API TRAPAPE\\publish\\trapapeAPI\\ApiTrapAppE\\ApiTrapAppE.csproj",
       "projectName": "ApiTrapAppE",
-      "projectPath": "C:\\Users\\Beto\\Documents\\trapapeSW\\trapapeAPI\\ApiTrapAppE\\ApiTrapAppE.csproj",
-      "packagesPath": "C:\\Users\\Beto\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Beto\\Documents\\trapapeSW\\trapapeAPI\\ApiTrapAppE\\obj\\",
+      "projectPath": "C:\\Users\\BetoHJ\\Desktop\\API TRAPAPE\\publish\\trapapeAPI\\ApiTrapAppE\\ApiTrapAppE.csproj",
+      "packagesPath": "C:\\Users\\BetoHJ\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\BetoHJ\\Desktop\\API TRAPAPE\\publish\\trapapeAPI\\ApiTrapAppE\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\Beto\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\BetoHJ\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -5791,7 +5791,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.401\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.402\\RuntimeIdentifierGraph.json"
       }
     }
   },

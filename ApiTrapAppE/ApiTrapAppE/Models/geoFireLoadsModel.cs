@@ -1,7 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-
-namespace ApiTrapAppE.Models
+﻿namespace ApiTrapAppE.Models
 {
     public class geoFireLoadsModel
     {

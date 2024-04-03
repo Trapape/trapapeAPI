@@ -1,13 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-
+﻿using ApiTrapAppE.Models;
 using Firebase.Auth;
 using Firebase.Storage;
-using System.Net;
-using ApiTrapAppE.Models;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using System.Xml.Linq;
-using System.Security.Policy;
-using System;
 
 namespace ApiTrapAppE.Controllers
 {
@@ -33,7 +28,7 @@ namespace ApiTrapAppE.Controllers
 
         [HttpPost]
         [Route("api/CargaExcel")]
-        public async Task<string> Post([FromForm] excel Objfile, [FromForm] string userConsig) 
+        public async Task<string> Post([FromForm] excel Objfile, [FromForm] string userConsig)
         {
             try
             {
@@ -80,7 +75,7 @@ namespace ApiTrapAppE.Controllers
                     response.URLExcel = downloadURL;
                     response.message = "Excel cargado correctamente.";
 
-                    ListData = procesaExcel.ProcesaExcel(Objfile.file, nombre, response, userConsig, downloadURL, idCargaPrincipal);
+                    ListData = procesaExcel.ProcesaExcel(Objfile.file, nombre, userConsig, downloadURL, idCargaPrincipal);
 
                     response.Data = ListData.ToArray();
 
@@ -90,7 +85,8 @@ namespace ApiTrapAppE.Controllers
                 {
                     return "No se cargo el archivo correctamente.";
                 }
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 return ex.Message.ToString();
             }
@@ -98,86 +94,76 @@ namespace ApiTrapAppE.Controllers
 
         [HttpPost]
         [Route("api/DownloadExcel")]
-        public async Task<string> DownloadExcel(string URLExcel, string userConsig)
+        public async Task<IActionResult> DownloadExcel(string URLExcel, string userConsig)
         {
-            try 
+            try
             {
+                // Validar y deshacer la codificación de la URL
+                URLExcel = Uri.UnescapeDataString(URLExcel);
                 URLExcel = URLExcel.Replace("%2F", "/");
+
+                // Extraer el nombre del archivo Excel
                 var _urlsplit = URLExcel.Split("/");
-                var url = _urlsplit[_urlsplit.Length - 1];
-                _urlsplit = url.Split("?");
+                var nombre = _urlsplit.LastOrDefault()?.Split("?").FirstOrDefault() ?? "";
 
-                string nombre = "";
-
-                foreach (var item in _urlsplit)
+                if (string.IsNullOrEmpty(nombre))
                 {
-                    if (item.Contains(".xlsx"))
-                    {
-                        nombre = item;
-                    }
-
-                    if (nombre == "")
-                    {
-                        nombre = item;
-                    }
+                    // Manejar el caso en el que no se pudo extraer el nombre del archivo
+                    return BadRequest("No se pudo determinar el nombre del archivo.");
                 }
 
+                // Configuración de Firebase
                 string user = "cargaeexcel@gmail.com";
                 string pass = "tr4p4p3AP1#";
                 string ruta = "trapape.appspot.com";
                 string api_key = "AIzaSyBs-iRGy4GQdnqmLrDqMSV8sIcraM9kXl4";
 
                 Guid IdDoucumento = Guid.NewGuid();
+                string idCargaPrincipal = IdDoucumento.ToString();
 
-                string idCargaPrincipal = Convert.ToString(IdDoucumento);
-
+                // Autenticación en Firebase
                 var auth = new FirebaseAuthProvider(new FirebaseConfig(api_key));
                 var access = await auth.SignInWithEmailAndPasswordAsync(user, pass);
 
-                var cancellation = new CancellationTokenSource();
+                // Configuración de FirebaseStorage
+                var storage = new FirebaseStorage(
+                    ruta,
+                    new FirebaseStorageOptions
+                    {
+                        AuthTokenAsyncFactory = () => Task.FromResult(access.FirebaseToken),
+                        ThrowOnCancel = true
+                    });
 
-                var task = new FirebaseStorage(
-                        ruta,
-                        new FirebaseStorageOptions
-                        {
-                            AuthTokenAsyncFactory = () => Task.FromResult(access.FirebaseToken),
-                            ThrowOnCancel = true
-                        })
-                        .Child("media/proj_meqjHnqVDFjzhizHdj6Fjq/app_vjubyyTnE5REBNbo1HHscW/dataApplications")
-                        .Child(nombre)
-                        .GetDownloadUrlAsync().GetAwaiter().GetResult();
+                // Obtener la URL de descarga
+                string task = await storage
+                    .Child("media/proj_meqjHnqVDFjzhizHdj6Fjq/app_vjubyyTnE5REBNbo1HHscW/dataApplications")
+                    .Child(nombre)
+                    .GetDownloadUrlAsync();
 
-                Stream stream = null;
-                string strURL = URLExcel;
-                HttpClient client = new HttpClient();
-                HttpResponseMessage httpResponse = await client.GetAsync(task);
-                Stream streamToReadFrom = await httpResponse.Content.ReadAsStreamAsync();
-
-                if (!nombre.Contains(".xlsx"))
+                // Descargar el archivo
+                using (var client = new HttpClient())
                 {
-                    nombre = nombre + ".xlsx";
+                    var httpResponse = await client.GetAsync(task);
+                    var streamToReadFrom = await httpResponse.Content.ReadAsStreamAsync();
+
+                    if (!nombre.EndsWith(".xlsx"))
+                    {
+                        nombre += ".xlsx";
+                    }
+
+                    // Crear un objeto IFormFile a partir del flujo
+                    var objFile = new FormFile(streamToReadFrom, 0, streamToReadFrom.Length, null, nombre);
+
+                    // Lógica de procesamiento en una clase separada (ProcesaExcelController)
+                    var procesaExcel = new ProcesaExcelController();
+                    var response = procesaExcel.ProcesaExcel(objFile, nombre, userConsig, task, idCargaPrincipal);
+
+                    return Ok(response); // Devolver una respuesta HTTP 200 OK con el objeto response serializado automáticamente a JSON.
                 }
-
-                IFormFile Objfile = new FormFile(streamToReadFrom, 0, streamToReadFrom.Length, nombre.Replace(".xlsx", ""), nombre);
-
-                ResponseModel response = new ResponseModel();
-                List<DataLoadsModel> ListData = new List<DataLoadsModel>();
-
-                var procesaExcel = new ProcesaExcelController();
-
-                response.isSucces = true;
-                response.URLExcel = task;
-                response.message = "Documento Procesado.";
-
-                ListData = procesaExcel.ProcesaExcel(Objfile, nombre, response, userConsig, task, idCargaPrincipal);
-
-                response.Data = ListData.ToArray();
-
-                return JsonConvert.SerializeObject(response);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
-                return ex.Message.ToString();
+                return BadRequest(ex.Message); // Devolver una respuesta HTTP 400 Bad Request con el mensaje de error.
             }
         }
 

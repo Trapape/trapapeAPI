@@ -543,11 +543,11 @@ namespace ApiTrapAppE.Controllers
 
             if (row.Table.Columns.Contains("entrega_administrative_area") && row["entrega_administrative_area"] is not null)
             {
-                PEntrega.area_administrative_1 = (string)row["entrega_administrative_area"];
+                PEntrega.administrative_area = (string)row["entrega_administrative_area"];
             }
             else
             {
-                PEntrega.area_administrative_1 = administrative_area;
+                PEntrega.administrative_area = administrative_area;
             }
 
             if (row.Table.Columns.Contains("entrega_country") && row["entrega_country"] is not null)
@@ -684,11 +684,11 @@ namespace ApiTrapAppE.Controllers
 
             if (row.Table.Columns.Contains("recoleccion_administrative_area") && row["recoleccion_administrative_area"] is not null)
             {
-                PRecoleccion.area_administrative_1 = (string)row["recoleccion_administrative_area"];
+                PRecoleccion.administrative_area = (string)row["recoleccion_administrative_area"];
             }
             else
             {
-                PRecoleccion.area_administrative_1 = administrative_area;
+                PRecoleccion.administrative_area = administrative_area;
             }
 
             if (row.Table.Columns.Contains("recoleccion_country") && row["recoleccion_country"] is not null)

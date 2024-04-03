@@ -1,7 +1,3 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -15,7 +11,9 @@ var app = builder.Build();
 
 app.UseCors(builder =>
 {
-    builder.WithOrigins("http://localhost:3000")
+    _ = builder.WithOrigins("http://localhost:3000",
+                            "https://main.d3r94jqm5mt9kz.amplifyapp.com",
+                            "https://develop.d3r94jqm5mt9kz.amplifyapp.com")
            .AllowAnyHeader()
            .AllowAnyMethod();
 });
